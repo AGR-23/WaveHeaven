@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="es" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WaveHeaven - Ajuste Automático de Volumen</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            DEFAULT: '#3b82f6',
+                            dark: '#60a5fa',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="flex flex-col min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
+    <header class="px-4 lg:px-6 h-14 flex items-center">
+        <a href="#" class="flex items-center justify-center">
+            <i data-lucide="audio-waveform" class="h-6 w-6"></i>
+            <span class="ml-2 text-lg font-bold">WaveHeaven</span>
+        </a>
+        <nav class="ml-auto flex gap-4 sm:gap-6">
+            <a href="#features" class="text-sm font-medium hover:underline underline-offset-4">Características</a>
+            <a href="#how-it-works" class="text-sm font-medium hover:underline underline-offset-4">Cómo Funciona</a>
+            <a href="#demo" class="text-sm font-medium hover:underline underline-offset-4">Demo</a>
+            <button id="darkModeToggle" class="text-sm font-medium hover:underline underline-offset-4">
+                <i data-lucide="sun" class="h-5 w-5 dark:hidden"></i>
+                <i data-lucide="moon" class="h-5 w-5 hidden dark:inline"></i>
+                <span class="sr-only">Cambiar modo</span>
+            </button>
+        </nav>
+    </header>
+
+    <main class="flex-1">
+        <section class="w-full py-12 md:py-24 lg:py-32 xl:py-48">
+            <div class="container px-4 md:px-6">
+                <div class="flex flex-col items-center space-y-4 text-center">
+                    <div class="space-y-2">
+                        <h1 class="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none">
+                            Bienvenido a WaveHeaven
+                        </h1>
+                        <p class="mx-auto max-w-[700px] text-gray-500 md:text-xl dark:text-gray-400">
+                            Experimenta un sonido perfecto con nuestro ecualizador automático inteligente. Eleva tu audio a nuevas alturas.
+                        </p>
+                    </div>
+                    <div class="space-x-4">
+                        <button class="px-4 py-2 bg-blue-600 text-white rounded" onclick="document.getElementById('demo').scrollIntoView({behavior: 'smooth'})">
+                            Probar Demo
+                        </button>
+                        <button class="px-4 py-2 border border-gray-300 rounded">
+                            Más Información
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="features" class="w-full py-12 md:py-24 lg:py-32 bg-gray-100">
+            <div class="container px-4 md:px-6">
+                <h2 class="text-3xl font-bold tracking-tighter sm:text-5xl text-center mb-12">Características</h2>
+                <div class="grid gap-10 sm:grid-cols-2 md:grid-cols-3">
+                    <div class="flex flex-col items-center space-y-3 text-center">
+                        <i data-lucide="sliders" class="h-12 w-12 text-blue-600"></i>
+                        <h3 class="text-xl font-bold">Ecualización Inteligente</h3>
+                        <p class="text-gray-500">Ajusta automáticamente la configuración de audio para una calidad de sonido óptima</p>
+                    </div>
+                    <div class="flex flex-col items-center space-y-3 text-center">
+                        <i data-lucide="music" class="h-12 w-12 text-blue-600"></i>
+                        <h3 class="text-xl font-bold">Configuración manual personalizada</h3>
+                        <p class="text-gray-500">Descripción</p>
+                    </div>
+                    <div class="flex flex-col items-center space-y-3 text-center">
+                        <i data-lucide="headphones" class="h-12 w-12 text-blue-600"></i>
+                        <h3 class="text-xl font-bold">Ajuste de volumen automático</h3>
+                        <p class="text-gray-500">Descripción</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="demo" class="w-full py-12 md:py-24 lg:py-32">
+            <div class="container px-4 md:px-6">
+                <h2 class="text-3xl font-bold tracking-tighter sm:text-5xl text-center mb-12">Demo de WaveHeaven</h2>
+                <div class="max-w-2xl mx-auto space-y-6">
+                    <p class="text-center text-lg text-gray-500">
+                        Experimenta el ajuste automático de volumen en tiempo real.
+                    </p>
+                    <div class="flex flex-col items-center space-y-4">
+                        <p id="ambientVolumeDisplay" class="text-xl font-semibold">Volumen Ambiental: --</p>
+                        <div class="space-x-4">
+                            <button onclick="startListening()" class="px-4 py-2 bg-blue-600 text-white rounded flex items-center">
+                                <i data-lucide="mic" class="mr-2 h-4 w-4"></i>
+                                Activar Micrófono
+                            </button>
+                            <button onclick="stopListening()" class="px-4 py-2 border border-gray-300 rounded flex items-center">
+                                <i data-lucide="mic-off" class="mr-2 h-4 w-4"></i>
+                                Desactivar Micrófono
+                            </button>
+                        </div>
+                        <p class="text-lg">Volumen de la Pestaña: <span id="tabVolumeDisplay" class="font-semibold">100%</span></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="cta" class="w-full py-12 md:py-24 lg:py-32 bg-blue-600 text-white">
+            <div class="container px-4 md:px-6">
+                <div class="flex flex-col items-center space-y-4 text-center">
+                    <div class="space-y-2">
+                        <h2 class="text-3xl font-bold tracking-tighter sm:text-5xl">Experimenta WaveHeaven Hoy</h2>
+                        <p class="mx-auto max-w-[600px] text-blue-100 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+                            Transforma tu experiencia de escucha con nuestro ecualizador automático de vanguardia. Pruébalo ahora y escucha la diferencia.
+                        </p>
+                    </div>
+                    <div class="w-full max-w-sm space-y-2">
+                        <button class="w-full px-8 py-3 bg-white text-blue-600 rounded-full text-lg font-semibold flex items-center justify-center">
+                            <i data-lucide="zap" class="mr-2 h-5 w-5"></i>
+                            Iniciar Prueba Gratuita
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t">
+        <p class="text-xs text-gray-500">© 2025 WaveHeaven. Todos los putos derechos reservados.</p>
+        <nav class="sm:ml-auto flex gap-4 sm:gap-6">
+            <a class="text-xs hover:underline underline-offset-4" href="#">Términos de Servicio</a>
+            <a class="text-xs hover:underline underline-offset-4" href="#">Privacidad</a>
+        </nav>
+    </footer>
+
+    <script>
+        let audioContext;
+        let analyser;
+        let microphone;
+        let dataArray;
+        let isListening = false;
+        let ambientVolumeDisplay = document.getElementById("ambientVolumeDisplay");
+
+        let globalAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+        let gainNode = globalAudioContext.createGain(); // Controlador de volumen
+
+        async function captureAudioFromTabs() {
+            try {
+                // Pide permiso para compartir pantalla y audio de una pestaña
+                const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+                const audioTrack = stream.getAudioTracks()[0];
+
+                if (!audioTrack) {
+                    throw new Error("No se detectó audio en la pestaña seleccionada.");
+                }
+
+                const audioSource = globalAudioContext.createMediaStreamSource(new MediaStream([audioTrack]));
+                audioSource.connect(gainNode).connect(globalAudioContext.destination);
+
+                console.log("Capturando audio de la pestaña activa...");
+            } catch (error) {
+                console.error("No se pudo capturar el audio de la pestaña:", error);
+                alert("Asegúrate de compartir una pestaña con audio cuando se te pida.");
+            }
+        }   
+
+        async function startListening() {
+            if (isListening) return;
+            isListening = true;
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                audioContext = new AudioContext();
+                analyser = audioContext.createAnalyser();
+                microphone = audioContext.createMediaStreamSource(stream);
+                microphone.connect(analyser);
+                analyser.fftSize = 256;
+                dataArray = new Uint8Array(analyser.frequencyBinCount);
+                analyzeAudio();
+
+                // También capturamos el audio de las pestañas abiertas
+                await captureAudioFromTabs();
+            } catch (error) {
+                console.error("Error al acceder al micrófono:", error);
+                alert("No se pudo acceder al micrófono. Verifica los permisos.");
+            }
+        }
+
+        function stopListening() {
+            if (!isListening) return;
+            isListening = false;
+            if (audioContext) {
+                audioContext.close();
+            }
+            ambientVolumeDisplay.textContent = "Volumen Ambiental: --";
+        }
+
+        function analyzeAudio() {
+            if (!isListening) return;
+            analyser.getByteFrequencyData(dataArray);
+
+            // Calcular el volumen promedio del entorno
+            let volume = dataArray.reduce((sum, val) => sum + val, 0) / dataArray.length;
+
+            // Actualizar la UI con el volumen actual
+            ambientVolumeDisplay.textContent = `Volumen Ambiental: ${volume.toFixed(2)}`;
+
+            // Ajustar automáticamente el volumen de la pestaña activa
+            adjustVolumeBasedOnAmbient(volume);
+
+            requestAnimationFrame(analyzeAudio);
+        }
+
+        function adjustVolumeBasedOnAmbient(ambientVolume) {
+            let newVolume;
+
+            if (ambientVolume > 80) {
+                newVolume = 0.3; // Si hay mucho ruido, baja el volumen
+            } else if (ambientVolume > 50) {
+                newVolume = 0.6; // Ajuste intermedio
+            } else {
+                newVolume = 1.0; // Si hay poco ruido, mantiene el volumen
+            }
+
+            let currentVolume = gainNode.gain.value;
+
+            // Solo imprimir en consola si hay un cambio real en el volumen
+            if (Math.abs(currentVolume - newVolume) > 0.05) {
+                console.log(`🔊 Volumen ambiental detectado: ${ambientVolume.toFixed(2)}`); //cambiar
+                console.log(`🎚️ Ajustando volumen de la pestaña: ${Math.round(newVolume * 100)}%`);
+
+                // Aplicar suavemente la transición del volumen
+                gainNode.gain.linearRampToValueAtTime(newVolume, globalAudioContext.currentTime + 0.5);
+
+                // Mostrar en la interfaz
+                document.getElementById("tabVolumeDisplay").textContent = Math.round(newVolume * 100) + "%";
+            }
+        }
+
+        // Inicializar los iconos de Lucide
+        lucide.createIcons();
+    </script>
+    <script>
+        // Dark mode toggle functionality
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const html = document.documentElement;
+    
+        function setTheme(isDark) {
+            if (isDark) {
+                html.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                html.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+            }
+        }
+    
+        // Check for saved theme preference or use system preference
+        const savedTheme = localStorage.getItem('theme');
+        const systemDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    
+        if (savedTheme === 'dark' || (!savedTheme && systemDarkMode)) {
+            setTheme(true);
+        }
+    
+        darkModeToggle.addEventListener('click', () => {
+            const isDark = html.classList.toggle('dark');
+            setTheme(isDark);
+        });
+    </script>
+</body>
+</html>
