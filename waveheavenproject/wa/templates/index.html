@@ -316,7 +316,7 @@
             }
 
             const audioSource = globalAudioContext.createMediaStreamSource(new MediaStream([audioTrack]));
-            audioSource.connect(gainNode).connect(globalAudioContext.destination);
+            audioSource.connect(gainNode).connect(globalAudioContext.destination);  // Solo el audio de la pestaña se reproduce
 
             console.log("Capturando audio de la pestaña activa...");
         } catch (error) {
@@ -324,7 +324,6 @@
             alert("Asegúrate de compartir una pestaña con audio cuando se te pida.");
         }
     }
-
     async function startListening() {
         if (isListening) return;
         isListening = true;
@@ -334,14 +333,15 @@
             audioContext = new AudioContext();
             analyser = audioContext.createAnalyser();
             microphone = audioContext.createMediaStreamSource(stream);
-            microphone.connect(analyser);
+            microphone.connect(analyser);  // Solo conectamos al analyser, NO al destino
             analyser.fftSize = 256;
             dataArray = new Uint8Array(analyser.frequencyBinCount);
             analyzeAudio();
 
+            // También capturamos el audio de las pestañas abiertas
             await captureAudioFromTabs();
         } catch (error) {
-            console.error("Error accessing microphone:", error);
+            console.error("Error al acceder al micrófono:", error);
             alert("No se pudo acceder al micrófono. Verifica los permisos.");
         }
     }
@@ -406,31 +406,41 @@
         window.postMessage({ type: "CONNECT_TO_TAB", data: {} }, "*");
     }
 
-    function adjustVolumeBasedOnAmbient(ambientVolume) {
-        let newVolume;
+    async function adjustVolumeBasedOnAmbient(ambientVolume) {
+        await ensureAudioContextIsRunning();  // Asegurar que el audio esté activo
+
         const categoryElement = document.getElementById('soundCategory');
-        if (!categoryElement) return;
+        if (!categoryElement) return; // Evita errores si el elemento no existe
         const category = categoryElement.value;
+
+        let newVolume;
 
         switch (category) {
             case 'music':
-                newVolume = ambientVolume > 50 ? Math.max(0.3, 1.0 - (ambientVolume - 50) / 80) : 1.0;
+                newVolume = ambientVolume > 50
+                    ? Math.max(0.3, 1.0 - (ambientVolume - 50) / 80)
+                    : 1.0;
                 break;
             case 'podcast':
-                newVolume = ambientVolume > 50 ? Math.max(0.4, 0.8 - (ambientVolume - 50) / 120) : 0.8;
+                newVolume = ambientVolume > 50
+                    ? Math.max(0.4, 0.8 - (ambientVolume - 50) / 120)
+                    : 0.8;
                 break;
             case 'call':
-                newVolume = ambientVolume > 50 ? Math.max(0.5, 1.2 - (ambientVolume - 50) / 90) : 1.0;
+                newVolume = ambientVolume > 50
+                    ? Math.max(0.5, 1.2 - (ambientVolume - 50) / 90)
+                    : 1.0;
                 break;
             default:
                 newVolume = 1.0;
         }
 
-        newVolume = Math.max(0, Math.min(1, newVolume));
+        newVolume = Math.max(0.1, Math.min(1, newVolume));
 
-        console.log(`Ambient Volume: ${ambientVolume}, Adjusted Volume: ${newVolume}`);
+        console.log(`Ambient Volume: ${ambientVolume}, Adjusted Volume: ${newVolume}`); // Ver cambios en la consola
 
-        window.postMessage({ type: "WH_ADJUST_VOLUME", volume: newVolume }, "*");
+        gainNode.gain.cancelScheduledValues(globalAudioContext.currentTime);
+        gainNode.gain.setTargetAtTime(newVolume, globalAudioContext.currentTime, 0.5);
 
         const volumeDisplay = document.getElementById("tabVolumeDisplay");
         if (volumeDisplay) {
@@ -438,29 +448,18 @@
             volumeDisplay.style.color = newVolume < 0.5 ? 'red' : 'green';
         }
 
-        gainNode.gain.cancelScheduledValues(globalAudioContext.currentTime);
-        gainNode.gain.setTargetAtTime(newVolume, globalAudioContext.currentTime, 0.5);
-
         const volumeBar = document.getElementById("volumeBar");
         if (volumeBar) {
             volumeBar.setAttribute("value", newVolume);
         }
-
-        if (activeTabId) {
-            chrome.runtime.sendMessage({
-                type: "adjustVolume",
-                volume: newVolume,
-                tabId: activeTabId
-            }, (response) => {
-                if (response && response.status === "success") {
-                    console.log("Volumen ajustado en la pestaña:", activeTabId);
-                } else {
-                    console.error("Error al ajustar el volumen en la pestaña.");
-                }
-            });
-        }
     }
 
+    async function ensureAudioContextIsRunning() {
+        if (globalAudioContext.state === 'suspended') {
+            await globalAudioContext.resume();
+            console.log('AudioContext resumed');
+        }
+    }
     // Dark mode toggle functionality
     function setTheme(isDark) {
         if (isDark) {
