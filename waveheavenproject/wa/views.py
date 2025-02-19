@@ -58,3 +58,27 @@ def adjust_volume(request):
 
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+    
+@csrf_exempt
+def set_sound_category(request):
+    if request.method != 'POST':
+        return HttpResponseNotAllowed(['POST'])
+
+    try:
+        data = json.loads(request.body)
+        category = data.get('category', 'music')
+
+        # Obtener preferencias del usuario (como en tus otras vistas)
+        if request.user.is_authenticated:
+            user_prefs = UserPreferences.objects.get(user=request.user)
+        else:
+            user_prefs = UserPreferences.objects.get(user=User.objects.first())
+
+        user_prefs.sound_category = category
+        user_prefs.save()
+
+        return JsonResponse({'status': 'success', 'category': user_prefs.sound_category})
+
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+    
