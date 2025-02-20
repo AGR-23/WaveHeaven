@@ -301,6 +301,9 @@
     let activeTabId = null;
     let globalAudioContext = new (window.AudioContext || window.webkitAudioContext)();
     let gainNode = globalAudioContext.createGain(); // Controlador de volumen
+    let exposureStartTime = null; 
+    let exposureThreshold = 5 * 1000; // 5 seconds in milliseconds (just to test later it should be 10 minutes)
+    let warningTriggered = false;
 
 
     // Inicializar los iconos de Lucide
@@ -364,6 +367,7 @@
         ambientVolumeDisplay.textContent = `Volumen Ambiental: ${volume.toFixed(2)}`;
 
         adjustVolumeBasedOnAmbient(volume);
+        checkNoiseExposure(volume); // Check for prolonged exposure
 
         requestAnimationFrame(analyzeAudio);
     }
@@ -407,10 +411,10 @@
     }
 
     async function adjustVolumeBasedOnAmbient(ambientVolume) {
-        await ensureAudioContextIsRunning();  // Asegurar que el audio esté activo
+        await ensureAudioContextIsRunning();  // Avoids errors when resuming the context
 
         const categoryElement = document.getElementById('soundCategory');
-        if (!categoryElement) return; // Evita errores si el elemento no existe
+        if (!categoryElement) return; // Evades errors if the element is not found
         const category = categoryElement.value;
 
         let newVolume;
@@ -437,7 +441,7 @@
 
         newVolume = Math.max(0.1, Math.min(1, newVolume));
 
-        console.log(`Ambient Volume: ${ambientVolume}, Adjusted Volume: ${newVolume}`); // Ver cambios en la consola
+        console.log(`Ambient Volume: ${ambientVolume}, Adjusted Volume: ${newVolume}`); // Show the volume in the console
 
         gainNode.gain.cancelScheduledValues(globalAudioContext.currentTime);
         gainNode.gain.setTargetAtTime(newVolume, globalAudioContext.currentTime, 0.5);
@@ -460,6 +464,45 @@
             console.log('AudioContext resumed');
         }
     }
+
+    function checkNoiseExposure(ambientVolume) {
+        console.log('Pillando sonido: ' + ambientVolume);
+        const dBThreshold = 85; // 85 dB warning limit
+
+        if (ambientVolume >= dBThreshold) {
+            if (!exposureStartTime) {
+                exposureStartTime = Date.now(); // Start tracking
+            }
+
+            let elapsedTime = Date.now() - exposureStartTime; //how much time have passed since the exposure started
+            if (elapsedTime >= exposureThreshold && !warningTriggered) {
+                console.log('Warning: High noise exposure detected');
+                triggerWarning();
+                warningTriggered = true; // Prevent multiple warnings
+            }
+        } else {
+            exposureStartTime = null; // Reset if volume drops
+            warningTriggered = false;
+        }
+    }
+
+    function triggerWarning() {
+        if (Notification.permission === "granted") {
+            new Notification("⚠ High Noise Exposure", {
+                body: "You've been exposed to high noise levels (>85 dB) for over 10 minutes. Consider lowering the volume or taking a break.",
+                icon: "" // Replace with an actual icon
+            });
+        } else if (Notification.permission !== "denied") { // then request permission and then trigger the warning again
+            Notification.requestPermission().then(permission => {
+                if (permission === "granted") {
+                    triggerWarning();
+                }
+            });
+        } else {
+            alert("High Noise Exposure Warning: You've been listening to loud sounds for too long!");
+        }
+    }
+
     // Dark mode toggle functionality
     function setTheme(isDark) {
         if (isDark) {
