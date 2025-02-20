@@ -311,14 +311,14 @@
 
     async function captureAudioFromTabs() {
         try {
-            const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
-            const audioTrack = stream.getAudioTracks()[0];
+            const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true }); // Acceso a pestaña
+            const audioTrack = stream.getAudioTracks()[0]; // Acceso a la pista de la pestaña
 
             if (!audioTrack) {
                 throw new Error("No se detectó audio en la pestaña seleccionada.");
             }
 
-            const audioSource = globalAudioContext.createMediaStreamSource(new MediaStream([audioTrack]));
+            const audioSource = globalAudioContext.createMediaStreamSource(new MediaStream([audioTrack])); // Conversion pista-audio
             audioSource.connect(gainNode).connect(globalAudioContext.destination);  // Solo el audio de la pestaña se reproduce
 
             console.log("Capturando audio de la pestaña activa...");
@@ -332,14 +332,14 @@
         isListening = true;
 
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            audioContext = new AudioContext();
-            analyser = audioContext.createAnalyser();
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true }); // Acceso al microfono
+            audioContext = new AudioContext(); // Instanciacón de un contexto 
+            analyser = audioContext.createAnalyser(); // Analiza las frecuencias del microfono
             microphone = audioContext.createMediaStreamSource(stream);
             microphone.connect(analyser);  // Solo conectamos al analyser, NO al destino
-            analyser.fftSize = 256;
+            analyser.fftSize = 256; // Resolución de la frecuencia
             dataArray = new Uint8Array(analyser.frequencyBinCount);
-            analyzeAudio();
+            analyzeAudio(); // Bucle de analisis
 
             // También capturamos el audio de las pestañas abiertas
             await captureAudioFromTabs();
@@ -360,16 +360,16 @@
 
     function analyzeAudio() {
         if (!isListening) return;
-        analyser.getByteFrequencyData(dataArray);
+        analyser.getByteFrequencyData(dataArray); // Obtiene datos de la frecuencia
 
-        let volume = dataArray.reduce((sum, val) => sum + val, 0) / dataArray.length;
+        let volume = dataArray.reduce((sum, val) => sum + val, 0) / dataArray.length; // Calcula volumen promedio
 
-        ambientVolumeDisplay.textContent = `Volumen Ambiental: ${volume.toFixed(2)}`;
+        ambientVolumeDisplay.textContent = `Volumen Ambiental: ${volume.toFixed(2)}`; // Muestra volumen en pantalla
 
-        adjustVolumeBasedOnAmbient(volume);
+        adjustVolumeBasedOnAmbient(volume); // La pestaña se ajusta segun el ruido detectado
         checkNoiseExposure(volume); // Check for prolonged exposure
 
-        requestAnimationFrame(analyzeAudio);
+        requestAnimationFrame(analyzeAudio); // Se llama en bucle
     }
 
     function updateSoundCategory() {
