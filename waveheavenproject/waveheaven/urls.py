@@ -12,6 +12,7 @@ from wa.views import (
     user_logout,
     hearing_test
 )
+from profiles import views
 
 urlpatterns = [
     # Panel de administración de Django
@@ -31,6 +32,10 @@ urlpatterns = [
     path('api/set_sound_category/', set_sound_category, name='set_sound_category'),
     path("dashboard/", user_dashboard, name="dashboard"),
     path("hearing-test/", hearing_test, name="hearing_test"),
-
-
+    
+    # Rutas de función Sound Profile
+     path('profiles', views.list_profiles, name='list_profiles'),
+    path('create/', views.create_profile, name='create_profile'),
+    path('edit/<int:profile_id>/', views.edit_profile, name='edit_profile'),
+    path('apply/<int:profile_id>/', views.apply_profile, name='apply_profile'),
 ]

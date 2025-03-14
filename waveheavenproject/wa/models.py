@@ -1,33 +1,42 @@
 from django.db import models
+from django.contrib.auth.models import User
+import json
 
 class UserPreferences(models.Model):
-    id_user = models.AutoField(primary_key=True)  # ID del usuario (ahora es la PK)
-    name = models.CharField(max_length=150)  # Nombre del usuario
-    email = models.EmailField(unique=True)  # Email del usuario, debe ser único
-    audio_settings = models.TextField(blank=True, null=True)  # Preferencias de audio
-    usage_history = models.TextField(blank=True, null=True)  # Historial de uso
-
-    ideal_volume = models.FloatField(default=50.0)  
+    user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)  # Campo user
+    name = models.CharField(max_length=151)
+    email = models.EmailField(max_length=254, unique=True)
+    audio_settings = models.TextField(blank=True, null=True)
+    usage_history = models.TextField(blank=True, null=True)
+    ideal_volume = models.FloatField(default=50.0)
     microphone_active = models.BooleanField(default=False)
     last_adjusted_volume = models.FloatField(default=50.0)
-
-    low_freq_threshold = models.FloatField(default=50.0)  # 250Hz
-    mid_freq_threshold = models.FloatField(default=50.0)  # 1000Hz
-    high_freq_threshold = models.FloatField(default=50.0)  # 4000Hz
-
-    SOUND_CATEGORIES = [
-        ('music', 'Música'),
-        ('podcast', 'Podcasts'),
-        ('call', 'Llamadas'),
-    ]
+    low_freq_threshold = models.FloatField(default=50.0)
+    mid_freq_threshold = models.FloatField(default=50.0)
+    high_freq_threshold = models.FloatField(default=50.0)
     sound_category = models.CharField(
+        choices=[('music', 'Música'), ('podcast', 'Podcasts'), ('call', 'Llamadas')],
+        default='music',
         max_length=10,
-        choices=SOUND_CATEGORIES,
-        default='music'
     )
+    audio_profiles = models.JSONField(default=list)  # Campo para almacenar perfiles de audio
 
     def __str__(self):
-        return f"{self.name} ({self.email})"
+        return f"Preferencias de {self.user.username}"
+    
+    def get_audio_profiles(self):
+        return self.audio_profiles  # Devuelve la lista de perfiles de audio
+
+    def save_audio_profiles(self, profiles):
+        self.audio_profiles = profiles
+        self.save()
+
+class SoundProfile(UserPreferences):
+    class Meta:
+        proxy = True  # Esto hace que SoundProfile sea un modelo proxy
+
+    def custom_method(self):
+        return f"Perfil de sonido para {self.user.username}"
 
 class Device(models.Model):
     user = models.ForeignKey(UserPreferences, on_delete=models.CASCADE)  # Relación con UserPreferences

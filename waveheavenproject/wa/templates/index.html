@@ -24,7 +24,8 @@
     </script>
 </head>
 
-<body class="flex flex-col min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
+<body
+    class="flex flex-col min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
     <header class="px-4 lg:px-6 h-14 flex items-center">
         <a href="#" class="flex items-center justify-center">
             <i data-lucide="audio-waveform" class="h-6 w-6"></i>
@@ -36,11 +37,14 @@
             <a href="#demo" class="text-sm font-medium hover:underline underline-offset-4">Demo</a>
 
             {% if user.is_authenticated %}
-                <a href="{% url 'dashboard' %}" class="text-sm font-medium hover:underline underline-offset-4">Dashboard</a>
-                <a href="{% url 'logout' %}" class="text-sm font-medium hover:underline underline-offset-4">Logout</a>
+            <a href="{% url 'dashboard' %}" class="text-sm font-medium hover:underline underline-offset-4">Dashboard</a>
+            <a href="{% url 'list_profiles' %}" class="text-sm font-medium hover:underline underline-offset-4">Sound
+                Profiles</a>
+            <a href="{% url 'logout' %}" class="text-sm font-medium hover:underline underline-offset-4">Logout</a>
             {% else %}
-                <a href="{% url 'login' %}" class="px-4 py-2 bg-blue-600 text-white rounded text-sm font-medium">Login</a>
-                <a href="{% url 'register' %}" class="px-4 py-2 bg-green-600 text-white rounded text-sm font-medium">Register</a>
+            <a href="{% url 'login' %}" class="px-4 py-2 bg-blue-600 text-white rounded text-sm font-medium">Login</a>
+            <a href="{% url 'register' %}"
+                class="px-4 py-2 bg-green-600 text-white rounded text-sm font-medium">Register</a>
             {% endif %}
 
             <button id="darkModeToggle" class="text-sm font-medium hover:underline underline-offset-4">
@@ -51,8 +55,6 @@
         </nav>
     </header>
 
-
-    </header>
     <main class="flex-1">
         <section class="w-full py-12 md:py-24 lg:py-32 xl:py-48">
             <div class="container px-4 md:px-6">
@@ -71,234 +73,151 @@
                             onclick="document.getElementById('demo').scrollIntoView({behavior: 'smooth'})">
                             Try Demo
                         </button>
-                        <button onclick="connectToExtension()" class="px-4 py-2 bg-green-600 text-white rounded">
-                            Connect to Audio Tab
                         </button>
-                        <div id="more Information"
-                            class="hidden mt-6 p-4 border border-gray-300 rounded-lg bg-white dark:bg-gray-800 text-left">
-                            <p><strong>WaveHeaven</strong> is an innovative platform designed to transform your auditory
-                                experience through automatic and personalized volume adjustments. Our system uses
-                                cutting-edge technology to analyze the sound environment in real time, capturing data
-                                through the Web Audio API to detect ambient volume and adapt it to your personal
-                                preferences.</p>
-                            <h2 class="mt-4 font-semibold">How does it work?</h2>
-                            <ul class="list-disc pl-5">
-                                <li><strong>Intelligent Volume Adjustment:</strong> WaveHeaven compares the ambient
-                                    noise level with your stored ideal volume and calculates an optimal adjustment to
-                                    provide a balanced audio experience regardless of the environment.</li>
-                                <li><strong>Total Personalization:</strong> Stores your preferences, such as ideal
-                                    volume, microphone status, and sound category (music, podcasts, or calls), so each
-                                    session adapts to your needs.</li>
-                                <li><strong>Browser Extension:</strong> In addition to the web application, WaveHeaven
-                                    extends to other tabs through a Chrome extension. This allows you to control the
-                                    volume of external pages (such as YouTube or Spotify) directly, ensuring a uniform
-                                    auditory experience across all your platforms.</li>
-                            </ul>
-                            <h2 class="mt-4 font-semibold">Technologies Involved:</h2>
-                            <ul class="list-disc pl-5">
-                                <li><strong>Backend:</strong> Developed with Django, managing business logic and data
-                                    persistence.</li>
-                                <li><strong>Frontend:</strong> A modern and responsive interface built with Tailwind CSS
-                                    and enriched with Lucide icons.</li>
-                                <li><strong>Audio Processing:</strong> Implementation of the Web Audio API to capture
-                                    and analyze the sound environment, along with the integration of a browser extension
-                                    that facilitates real-time audio control.</li>
-                            </ul>
-                            <h2 class="mt-4 font-semibold">Advantages:</h2>
-                            <ul class="list-disc pl-5">
-                                <li><strong>Personalized Auditory Experience:</strong> WaveHeaven adapts to your needs,
-                                    providing optimal sound without requiring manual intervention.</li>
-                                <li><strong>Multiplatform Integration:</strong> From the web application to control in
-                                    other tabs, enjoy a continuous and coherent audio experience.</li>
-                                <li><strong>Innovation and Technology:</strong> We leverage the latest web technologies
-                                    to offer you a robust, efficient, and easy-to-use product.</li>
-                            </ul>
-                            <p class="mt-4">Discover how WaveHeaven can transform the way you enjoy audio, making every
-                                listening experience perfect, no matter the environment.</p>
-                        </div>
+                        <a href="{% url 'list_profiles' %}" class="px-4 py-2 bg-purple-600 text-white rounded">
+                            Sound Profiles
+                        </a>
+                        <a href="{% url 'hearing_test' %}" class="px-4 py-2 bg-orange-600 text-white rounded">
+                            Hearing Test
+                        </a>
                     </div>
                 </div>
-        </section>
-        <main class="flex flex-col items-center text-center p-6">
-            <h1 class="text-3xl font-bold mb-4">Learn more about WaveHeaven</h1>
-            <p class="mb-6">An innovative platform for adaptive audio experiences.</p>
-            <button id="more-info-btn" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">More
-                Information</button>
-            <div id="more-info"
-                class="hidden mt-6 p-4 border border-gray-300 rounded-lg bg-white dark:bg-gray-800 text-left">
-                <p><strong>WaveHeaven</strong> is an innovative platform designed to transform your auditory experience
-                    through automatic and personalized volume adjustments. Our system uses cutting-edge technology to
-                    analyze the sound environment in real time, capturing data through the Web Audio API to detect
-                    ambient volume and adapt it to your personal preferences.</p>
-                <h2 class="mt-4 font-semibold">How does it work?</h2>
-                <ul class="list-disc pl-5">
-                    <li><strong>Intelligent Volume Adjustment:</strong> WaveHeaven compares the ambient noise level with
-                        your stored ideal volume and calculates an optimal adjustment to provide a balanced audio
-                        experience regardless of the environment.</li>
-                    <li><strong>Total Personalization:</strong> Stores your preferences, such as ideal volume,
-                        microphone status, and sound category (music, podcasts, or calls), so each session adapts to
-                        your needs.</li>
-                    <li><strong>Browser Extension:</strong> In addition to the web application, WaveHeaven extends to
-                        other tabs through a Chrome extension. This allows you to control the volume of external pages
-                        (such as YouTube or Spotify) directly, ensuring a uniform auditory experience across all your
-                        platforms.</li>
-                </ul>
-                <h2 class="mt-4 font-semibold">Technologies Involved:</h2>
-                <ul class="list-disc pl-5">
-                    <li><strong>Backend:</strong> Developed with Django, managing business logic and data persistence.
-                    </li>
-                    <li><strong>Frontend:</strong> A modern and responsive interface built with Tailwind CSS and
-                        enriched with Lucide icons.</li>
-                    <li><strong>Audio Processing:</strong> Implementation of the Web Audio API to capture and analyze
-                        the sound environment, along with the integration of a browser extension that facilitates
-                        real-time audio control.</li>
-                </ul>
-                <h2 class="mt-4 font-semibold">Advantages:</h2>
-                <ul class="list-disc pl-5">
-                    <li><strong>Personalized Auditory Experience:</strong> WaveHeaven adapts to your needs, providing
-                        optimal sound without requiring manual intervention.</li>
-                    <li><strong>Multiplatform Integration:</strong> From the web application to control in other tabs,
-                        enjoy a continuous and coherent audio experience.</li>
-                    <li><strong>Innovation and Technology:</strong> We leverage the latest web technologies to offer you
-                        a robust, efficient, and easy-to-use product.</li>
-                </ul>
-                <p class="mt-4">Discover how WaveHeaven can transform the way you enjoy audio, making every listening
-                    experience perfect, no matter the environment.</p>
             </div>
-        </main>
-        <footer class="w-full bg-gray-800 text-white p-4 text-center mt-auto">
-            © 2025 WaveHeaven. All rights reserved.
-        </footer>
-        </div>
-        <script>
-            document.getElementById("more-info-btn").addEventListener("click", function () {
-                document.getElementById("more-info").classList.toggle("hidden");
-            });
-        </script>
+        </section>
+
+        <section id="features" class="w-full py-12 md:py-24 lg:py-32 bg-gray-100 dark:bg-gray-800">
+            <div class="container px-4 md:px-6">
+                <h2 class="text-3xl font-bold tracking-tighter sm:text-5xl text-center mb-12">Features</h2>
+                <div class="grid gap-10 sm:grid-cols-2 md:grid-cols-3">
+                    <div class="flex flex-col items-center space-y-3 text-center">
+                        <i data-lucide="sliders" class="h-12 w-12 text-blue-600"></i>
+                        <h3 class="text-xl font-bold">Intelligent Equalization</h3>
+                        <p class="text-gray-500 dark:text-gray-400">Automatically adjusts audio settings for optimal
+                            sound quality based on ambient noise and content type.</p>
+                    </div>
+                    <div class="flex flex-col items-center space-y-3 text-center">
+                        <i data-lucide="music" class="h-12 w-12 text-blue-600"></i>
+                        <h3 class="text-xl font-bold">Custom Manual Configuration</h3>
+                        <p class="text-gray-500 dark:text-gray-400">Fine-tune your audio experience with personalized
+                            settings for different types of content and environments.</p>
+                    </div>
+                    <div class="flex flex-col items-center space-y-3 text-center">
+                        <i data-lucide="headphones" class="h-12 w-12 text-blue-600"></i>
+                        <h3 class="text-xl font-bold">Automatic Volume Adjustment</h3>
+                        <p class="text-gray-500 dark:text-gray-400">Dynamically adapts volume levels to maintain optimal
+                            listening experience in changing environments.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="how-it-works" class="w-full py-12 md:py-24 lg:py-32">
+            <div class="container px-4 md:px-6">
+                <h2 class="text-3xl font-bold tracking-tighter sm:text-5xl text-center mb-12">How It Works</h2>
+                <div class="max-w-3xl mx-auto space-y-6">
+                    <p class="text-center text-lg text-gray-500 dark:text-gray-400">
+                        WaveHeaven uses advanced algorithms to analyze your audio environment and content in real-time.
+                        Here's how it enhances your listening experience:
+                    </p>
+                    <ol class="list-decimal list-inside space-y-4 text-left text-gray-500 dark:text-gray-400">
+                        <li><strong>Ambient Noise Detection:</strong> Our system constantly monitors the surrounding
+                            noise levels.</li>
+                        <li><strong>Content Analysis:</strong> WaveHeaven identifies the type of audio you're listening
+                            to (music, podcast, call, etc.).</li>
+                        <li><strong>Smart Adjustment:</strong> Based on the ambient noise and content type, it
+                            automatically adjusts volume and equalizer settings.</li>
+                        <li><strong>User Preferences:</strong> The system learns from your manual adjustments to
+                            personalize the audio experience over time.</li>
+                        <li><strong>Real-time Adaptation:</strong> As your environment changes, WaveHeaven continuously
+                            optimizes your audio settings.</li>
+                    </ol>
+                </div>
+            </div>
+        </section>
+
+        <section id="demo" class="w-full py-12 md:py-24 lg:py-32">
+            <div class="container px-4 md:px-6">
+                <h2 class="text-3xl font-bold tracking-tighter sm:text-5xl text-center mb-12">WaveHeaven Demo</h2>
+                <div class="max-w-2xl mx-auto space-y-6">
+                    <p class="text-center text-lg text-gray-500 dark:text-gray-400">
+                        Experience real-time automatic volume adjustment.
+                    </p>
+                    <div class="flex flex-col items-center space-y-4">
+                        <p id="ambientVolumeDisplay" class="text-xl font-semibold">Ambient Volume: --</p>
+                        <div class="space-x-4">
+                            <button onclick="startListening()"
+                                class="px-4 py-2 bg-blue-600 text-white rounded flex items-center">
+                                <i data-lucide="mic" class="mr-2 h-4 w-4"></i>
+                                Activate Microphone
+                            </button>
+                            <button onclick="stopListening()"
+                                class="px-4 py-2 border border-gray-300 rounded flex items-center">
+                                <i data-lucide="mic-off" class="mr-2 h-4 w-4"></i>
+                                Deactivate Microphone
+                            </button>
+                        </div>
+                        <p class="text-lg">Tab Volume: <span id="tabVolumeDisplay" class="font-semibold">100%</span></p>
+                    </div>
+                </div>
+                <div class="flex flex-col items-center space-y-4 mt-8">
+                    <label class="text-lg font-semibold">Sound Profile:</label>
+                    <select id="soundCategory" class="px-4 py-2 border rounded">
+                        <option value="music">Music</option>
+                        <option value="podcast">Podcasts</option>
+                        <option value="call">Calls</option>
+                    </select>
+                    <button onclick="updateSoundCategory()" class="px-4 py-2 bg-blue-600 text-white rounded">
+                        Apply Category
+                    </button>
+                </div>
+            </div>
+            <progress id="volumeBar" value="1" max="1" class="w-full mt-8"></progress>
+        </section>
+
+        <section id="cta" class="w-full py-12 md:py-24 lg:py-32 bg-blue-600 text-white">
+            <div class="container px-4 md:px-6">
+                <div class="flex flex-col items-center space-y-4 text-center">
+                    <div class="space-y-2">
+                        <h2 class="text-3xl font-bold tracking-tighter sm:text-5xl">Experience WaveHeaven Today</h2>
+                        <p
+                            class="mx-auto max-w-[600px] text-blue-100 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+                            Transform your listening experience with our cutting-edge automatic equalizer. Stay tuned
+                            for our launch!
+                        </p>
+                    </div>
+                    <div class="w-full max-w-sm space-y-2">
+                        <button
+                            class="w-full px-8 py-3 bg-white text-blue-600 rounded-full text-lg font-semibold flex items-center justify-center"
+                            disabled>
+                            <i data-lucide="zap" class="mr-2 h-5 w-5"></i>
+                            Coming Soon
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t">
+        <p class="text-xs text-gray-500">© 2025 WaveHeaven. All rights reserved.</p>
+        <nav class="sm:ml-auto flex gap-4 sm:gap-6">
+            <a class="text-xs hover:underline underline-offset-4" href="#">Terms of Service</a>
+            <a class="text-xs hover:underline underline-offset-4" href="#">Privacy Policy</a>
+        </nav>
+    </footer>
+
+    <script>
+        // Dark mode toggle
+        document.getElementById('darkModeToggle').addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+        });
+
+        // Inicializar íconos de Lucide
+        lucide.createIcons();
+    </script>
 </body>
 
 </html>
-
-<section id="features" class="w-full py-12 md:py-24 lg:py-32 bg-gray-100 dark:bg-gray-800">
-    <div class="container px-4 md:px-6">
-        <h2 class="text-3xl font-bold tracking-tighter sm:text-5xl text-center mb-12">Features</h2>
-        <div class="grid gap-10 sm:grid-cols-2 md:grid-cols-3">
-            <div class="flex flex-col items-center space-y-3 text-center">
-                <i data-lucide="sliders" class="h-12 w-12 text-blue-600"></i>
-                <h3 class="text-xl font-bold">Intelligent Equalization</h3>
-                <p class="text-gray-500 dark:text-gray-400">Automatically adjusts audio settings for optimal
-                    sound quality based on ambient noise and content type.</p>
-            </div>
-            <div class="flex flex-col items-center space-y-3 text-center">
-                <i data-lucide="music" class="h-12 w-12 text-blue-600"></i>
-                <h3 class="text-xl font-bold">Custom Manual Configuration</h3>
-                <p class="text-gray-500 dark:text-gray-400">Fine-tune your audio experience with personalized
-                    settings for different types of content and environments.</p>
-            </div>
-            <div class="flex flex-col items-center space-y-3 text-center">
-                <i data-lucide="headphones" class="h-12 w-12 text-blue-600"></i>
-                <h3 class="text-xl font-bold">Automatic Volume Adjustment</h3>
-                <p class="text-gray-500 dark:text-gray-400">Dynamically adapts volume levels to maintain optimal
-                    listening experience in changing environments.</p>
-            </div>
-        </div>
-    </div>
-</section>
-
-<section id="how-it-works" class="w-full py-12 md:py-24 lg:py-32">
-    <div class="container px-4 md:px-6">
-        <h2 class="text-3xl font-bold tracking-tighter sm:text-5xl text-center mb-12">How It Works</h2>
-        <div class="max-w-3xl mx-auto space-y-6">
-            <p class="text-center text-lg text-gray-500 dark:text-gray-400">
-                WaveHeaven uses advanced algorithms to analyze your audio environment and content in real-time.
-                Here's how it enhances your listening experience:
-            </p>
-            <ol class="list-decimal list-inside space-y-4 text-left text-gray-500 dark:text-gray-400">
-                <li><strong>Ambient Noise Detection:</strong> Our system constantly monitors the surrounding
-                    noise levels.</li>
-                <li><strong>Content Analysis:</strong> WaveHeaven identifies the type of audio you're listening
-                    to (music, podcast, call, etc.).</li>
-                <li><strong>Smart Adjustment:</strong> Based on the ambient noise and content type, it
-                    automatically adjusts volume and equalizer settings.</li>
-                <li><strong>User Preferences:</strong> The system learns from your manual adjustments to
-                    personalize the audio experience over time.</li>
-                <li><strong>Real-time Adaptation:</strong> As your environment changes, WaveHeaven continuously
-                    optimizes your audio settings.</li>
-            </ol>
-        </div>
-    </div>
-</section>
-
-<section id="demo" class="w-full py-12 md:py-24 lg:py-32">
-    <div class="container px-4 md:px-6">
-        <h2 class="text-3xl font-bold tracking-tighter sm:text-5xl text-center mb-12">WaveHeaven Demo</h2>
-        <div class="max-w-2xl mx-auto space-y-6">
-            <p class="text-center text-lg text-gray-500 dark:text-gray-400">
-                Experience real-time automatic volume adjustment.
-            </p>
-            <div class="flex flex-col items-center space-y-4">
-                <p id="ambientVolumeDisplay" class="text-xl font-semibold">Ambient Volume: --</p>
-                <div class="space-x-4">
-                    <button onclick="startListening()"
-                        class="px-4 py-2 bg-blue-600 text-white rounded flex items-center">
-                        <i data-lucide="mic" class="mr-2 h-4 w-4"></i>
-                        Activate Microphone
-                    </button>
-                    <button onclick="stopListening()"
-                        class="px-4 py-2 border border-gray-300 rounded flex items-center">
-                        <i data-lucide="mic-off" class="mr-2 h-4 w-4"></i>
-                        Deactivate Microphone
-                    </button>
-                </div>
-                <p class="text-lg">Tab Volume: <span id="tabVolumeDisplay" class="font-semibold">100%</span></p>
-            </div>
-        </div>
-        <div class="flex flex-col items-center space-y-4 mt-8">
-            <label class="text-lg font-semibold">Sound Profile:</label>
-            <select id="soundCategory" class="px-4 py-2 border rounded">
-                <option value="music">Music</option>
-                <option value="podcast">Podcasts</option>
-                <option value="call">Calls</option>
-            </select>
-            <button onclick="updateSoundCategory()" class="px-4 py-2 bg-blue-600 text-white rounded">
-                Apply Category
-            </button>
-        </div>
-    </div>
-    <progress id="volumeBar" value="1" max="1" class="w-full mt-8"></progress>
-</section>
-
-<section id="cta" class="w-full py-12 md:py-24 lg:py-32 bg-blue-600 text-white">
-    <div class="container px-4 md:px-6">
-        <div class="flex flex-col items-center space-y-4 text-center">
-            <div class="space-y-2">
-                <h2 class="text-3xl font-bold tracking-tighter sm:text-5xl">Experience WaveHeaven Today</h2>
-                <p
-                    class="mx-auto max-w-[600px] text-blue-100 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                    Transform your listening experience with our cutting-edge automatic equalizer. Stay tuned
-                    for our launch!
-                </p>
-            </div>
-            <div class="w-full max-w-sm space-y-2">
-                <button
-                    class="w-full px-8 py-3 bg-white text-blue-600 rounded-full text-lg font-semibold flex items-center justify-center"
-                    disabled>
-                    <i data-lucide="zap" class="mr-2 h-5 w-5"></i>
-                    Coming Soon
-                </button>
-            </div>
-        </div>
-    </div>
-</section>
-</main>
-
-<footer class="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t">
-    <p class="text-xs text-gray-500">© 2025 WaveHeaven. All rights reserved.</p>
-    <nav class="sm:ml-auto flex gap-4 sm:gap-6">
-        <a class="text-xs hover:underline underline-offset-4" href="#">Terms of Service</a>
-        <a class="text-xs hover:underline underline-offset-4" href="#">Privacy Policy</a>
-    </nav>
-</footer>
 
 <script>
     let audioContext;
@@ -310,7 +229,7 @@
     let activeTabId = null;
     let globalAudioContext = new (window.AudioContext || window.webkitAudioContext)();
     let gainNode = globalAudioContext.createGain(); // Controlador de volumen
-    let exposureStartTime = null; 
+    let exposureStartTime = null;
     let exposureThreshold = 5 * 1000; // 5 seconds in milliseconds (just to test later it should be 10 minutes)
     let warningTriggered = false;
 

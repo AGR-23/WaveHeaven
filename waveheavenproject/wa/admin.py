@@ -1,7 +1,10 @@
 from django.contrib import admin
 from .models import UserPreferences, Device, AudioAdjustmentRecord, ExposureReport, HearingRiskNotification
+from django.db import models
+from django.contrib.auth.models import User
 
 class UserPreferencesAdmin(admin.ModelAdmin):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
     list_display = ('user', 'ideal_volume', 'microphone_active', 'sound_category')
     search_fields = ('user__username',)
     list_filter = ('sound_category', 'microphone_active')

@@ -1,0 +1,251 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WaveHeaven - Sound Profiles</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            DEFAULT: '#3b82f6',
+                            dark: '#60a5fa',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="flex flex-col min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
+    <!-- Header -->
+    <header class="px-4 lg:px-6 h-14 flex items-center border-b">
+        <a href="/" class="flex items-center justify-center">
+            <i data-lucide="audio-waveform" class="h-6 w-6 text-blue-600 dark:text-blue-400"></i>
+            <span class="ml-2 text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-500">
+                WaveHeaven
+            </span>
+        </a>
+        <nav class="ml-auto flex gap-4 sm:gap-6">
+            <a href="/profile" class="text-sm font-medium hover:underline underline-offset-4">Profile</a>
+            <a href="/equalizer" class="text-sm font-medium hover:underline underline-offset-4">Equalizer</a>
+            <a href="/hearing-test" class="text-sm font-medium hover:underline underline-offset-4">Hearing Test</a>
+            <a href="/statistics" class="text-sm font-medium hover:underline underline-offset-4">Statistics</a>
+            <button id="darkModeToggle" class="text-sm font-medium hover:underline underline-offset-4">
+                <i data-lucide="sun" class="h-5 w-5 dark:hidden"></i>
+                <i data-lucide="moon" class="h-5 w-5 hidden dark:inline"></i>
+                <span class="sr-only">Toggle mode</span>
+            </button>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-6">
+        <div class="max-w-4xl mx-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-3xl font-bold">Sound Profiles</h1>
+                <button onclick="openCreateProfileModal()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition flex items-center">
+                    <i data-lucide="plus" class="h-4 w-4 mr-2"></i>
+                    New
+                </button>
+            </div>
+            
+            <!-- Profile Cards -->
+            <div id="profilesContainer" class="space-y-4">
+                <!-- Los perfiles se cargarán dinámicamente aquí -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t">
+        <p class="text-xs text-gray-500 dark:text-gray-400">© 2025 WaveHeaven. All rights reserved.</p>
+        <nav class="sm:ml-auto flex gap-4 sm:gap-6">
+            <a class="text-xs hover:underline underline-offset-4" href="#">Terms of Service</a>
+            <a class="text-xs hover:underline underline-offset-4" href="#">Privacy Policy</a>
+        </nav>
+    </footer>
+
+    <!-- Modal para Crear/Editar Perfil -->
+    <div id="profileModal" class="fixed inset-0 bg-black bg-opacity-50 hidden justify-center items-center">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 w-full max-w-md">
+            <h2 id="modalTitle" class="text-xl font-bold mb-4">New Profile</h2>
+            <form id="profileForm" onsubmit="saveProfile(event)">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Profile name</label>
+                        <input type="text" id="profileName" name="name" class="w-full px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Bass</label>
+                        <input type="number" id="profileBass" name="bass" min="0" max="100" class="w-full px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Mid</label>
+                        <input type="number" id="profileMid" name="mid" min="0" max="100" class="w-full px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Treble</label>
+                        <input type="number" id="profileTreble" name="treble" min="0" max="100" class="w-full px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Environment</label>
+                        <input type="text" id="profileEnvironment" name="environment" class="w-full px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600">
+                    </div>
+                </div>
+                <div class="mt-6 flex justify-end space-x-4">
+                    <button type="button" onclick="closeProfileModal()" class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">
+                        Save
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Datos de ejemplo (simulando la base de datos)
+        let profiles = [
+            {
+                name: "Music",
+                bass: 80,
+                mid: 60,
+                treble: 50,
+                environment: "Inside"
+            },
+            {
+                name: "Podcast",
+                bass: 40,
+                mid: 85,
+                treble: 60,
+                environment: "Outside"
+            }
+        ];
+
+        // Cargar perfiles al iniciar
+        function loadProfiles() {
+            const container = document.getElementById('profilesContainer');
+            container.innerHTML = '';
+            profiles.forEach((profile, index) => {
+                const profileCard = `
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+                        <div class="flex justify-between items-start">
+                            <div class="flex items-center">
+                                <div class="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center mr-4">
+                                    <i data-lucide="settings" class="h-6 w-6 text-blue-600 dark:text-blue-400"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-xl font-semibold">${profile.name}</h3>
+                                    <p class="text-gray-500 dark:text-gray-400">${profile.environment}</p>
+                                </div>
+                            </div>
+                            <button onclick="editProfile(${index})" class="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+                                Edit
+                            </button>
+                        </div>
+                        <div class="mt-4 grid grid-cols-3 gap-4">
+                            <div>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">Bass</p>
+                                <div class="h-2 bg-gray-200 dark:bg-gray-700 rounded-full mt-1">
+                                    <div class="h-2 bg-blue-600 rounded-full" style="width: ${profile.bass}%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">Mid</p>
+                                <div class="h-2 bg-gray-200 dark:bg-gray-700 rounded-full mt-1">
+                                    <div class="h-2 bg-blue-600 rounded-full" style="width: ${profile.mid}%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">Treble</p>
+                                <div class="h-2 bg-gray-200 dark:bg-gray-700 rounded-full mt-1">
+                                    <div class="h-2 bg-blue-600 rounded-full" style="width: ${profile.treble}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += profileCard;
+            });
+            lucide.createIcons(); // Actualizar íconos de Lucide
+        }
+
+        // Abrir modal para crear/editar perfil
+        function openCreateProfileModal(profileIndex = null) {
+            const modal = document.getElementById('profileModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const form = document.getElementById('profileForm');
+
+            if (profileIndex !== null) {
+                // Editar perfil existente
+                modalTitle.textContent = "Edit Profile";
+                const profile = profiles[profileIndex];
+                document.getElementById('profileName').value = profile.name;
+                document.getElementById('profileBass').value = profile.bass;
+                document.getElementById('profileMid').value = profile.mid;
+                document.getElementById('profileTreble').value = profile.treble;
+                document.getElementById('profileEnvironment').value = profile.environment;
+                form.dataset.index = profileIndex;
+            } else {
+                // Crear nuevo perfil
+                modalTitle.textContent = "Nuevo Perfil";
+                form.reset();
+                delete form.dataset.index;
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        // Cerrar modal
+        function closeProfileModal() {
+            document.getElementById('profileModal').classList.add('hidden');
+        }
+
+        // Guardar perfil
+        function saveProfile(event) {
+            event.preventDefault();
+            const form = event.target;
+            const profile = {
+                name: form.name.value,
+                bass: parseInt(form.bass.value),
+                mid: parseInt(form.mid.value),
+                treble: parseInt(form.treble.value),
+                environment: form.environment.value
+            };
+
+            if (form.dataset.index !== undefined) {
+                // Editar perfil existente
+                profiles[form.dataset.index] = profile;
+            } else {
+                // Agregar nuevo perfil
+                profiles.push(profile);
+            }
+
+            closeProfileModal();
+            loadProfiles();
+        }
+
+        // Editar perfil
+        function editProfile(index) {
+            openCreateProfileModal(index);
+        }
+
+        // Inicializar
+        loadProfiles();
+        lucide.createIcons();
+
+        // Dark mode toggle
+        document.getElementById('darkModeToggle').addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+        });
+    </script>
+</body>
+</html>

@@ -5,7 +5,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from .forms import UserRegisterForm, DeviceForm
 from .models import Device
-from wa.models import UserPreferences
+from wa.models import UserPreferences, Device
 from django.contrib.auth.models import User  # Importar modelo de usuario
 
 def home(request):
