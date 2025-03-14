@@ -1,57 +1,256 @@
+{% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hearing Test</title>
+    <title>WaveHeaven - Hearing Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            DEFAULT: '#3b82f6',
+                            dark: '#60a5fa',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
 </head>
-<body>
-    <h2>Hearing Test</h2>
-    <p>Adjust the volume for each frequency until you can barely hear the sound.</p>
+<body class="flex flex-col min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
+    <!-- Header -->
+    <header class="px-4 lg:px-6 h-14 flex items-center border-b">
+        <a href="/" class="flex items-center justify-center">
+            <i data-lucide="audio-waveform" class="h-6 w-6 text-blue-600 dark:text-blue-400"></i>
+            <span class="ml-2 text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-500">
+                WaveHeaven
+            </span>
+        </a>
+        <nav class="ml-auto flex gap-4 sm:gap-6">
+            <a href="/profile" class="text-sm font-medium hover:underline underline-offset-4">Profile</a>
+            <a href="/equalizer" class="text-sm font-medium hover:underline underline-offset-4">Equalizer</a>
+            <a href="/hearing-test" class="text-sm font-medium hover:underline underline-offset-4 text-blue-600 dark:text-blue-400">Hearing Test</a>
+            <a href="/statistics" class="text-sm font-medium hover:underline underline-offset-4">Statistics</a>
+            <button id="darkModeToggle" class="text-sm font-medium hover:underline underline-offset-4">
+                <i data-lucide="sun" class="h-5 w-5 dark:hidden"></i>
+                <i data-lucide="moon" class="h-5 w-5 hidden dark:inline"></i>
+                <span class="sr-only">Toggle mode</span>
+            </button>
+        </nav>
+    </header>
 
-    <form method="post">
-        {% csrf_token %}
+    <!-- Main Content -->
+    <main class="flex-1 p-6">
+        <div class="max-w-4xl mx-auto">
+            <h1 class="text-3xl font-bold mb-6">Hearing Test</h1>
+            
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-semibold mb-4">Instructions</h2>
+                    <p class="text-gray-500 dark:text-gray-400 mb-4">
+                        Adjust the volume for each frequency until you can barely hear the sound.
+                    </p>
+                    <div class="bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-400 p-4">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <i data-lucide="info" class="h-5 w-5 text-blue-400"></i>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm text-blue-700 dark:text-blue-200">
+                                    Make sure you are in a quiet environment and use headphones for accurate results.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <form method="post" class="space-y-8">
+                    {% csrf_token %}
+                    
+                    <!-- Low Frequency Test (250 Hz) -->
+                    <div class="p-6 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                        <h3 class="text-xl font-semibold mb-4 flex items-center">
+                            <i data-lucide="wave-sine" class="h-5 w-5 mr-2 text-blue-600 dark:text-blue-400"></i>
+                            Low Frequency (250Hz)
+                        </h3>
+                        <div class="flex flex-col md:flex-row md:items-center gap-4">
+                            <button type="button" 
+                                    onclick="playSound(250)" 
+                                    class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition flex items-center justify-center">
+                                <i data-lucide="play" class="h-4 w-4 mr-2"></i>
+                                Play 250Hz
+                            </button>
+                            <div class="flex-1 flex items-center gap-4">
+                                <input type="range" 
+                                       id="low_volume" 
+                                       name="low_volume" 
+                                       min="0" 
+                                       max="100" 
+                                       step="1" 
+                                       value="50"
+                                       oninput="updateVolume('low_display', this.value)" 
+                                       class="flex-1 h-2 bg-gray-200 dark:bg-gray-600 rounded-full appearance-none cursor-pointer">
+                                <span id="low_display" class="text-lg font-semibold min-w-[3rem] text-center">50</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Mid Frequency Test (1000 Hz) -->
+                    <div class="p-6 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                        <h3 class="text-xl font-semibold mb-4 flex items-center">
+                            <i data-lucide="wave-sine" class="h-5 w-5 mr-2 text-purple-600 dark:text-purple-400"></i>
+                            Mid Frequency (1000Hz)
+                        </h3>
+                        <div class="flex flex-col md:flex-row md:items-center gap-4">
+                            <button type="button" 
+                                    onclick="playSound(1000)" 
+                                    class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition flex items-center justify-center">
+                                <i data-lucide="play" class="h-4 w-4 mr-2"></i>
+                                Play 1000Hz
+                            </button>
+                            <div class="flex-1 flex items-center gap-4">
+                                <input type="range" 
+                                       id="mid_volume" 
+                                       name="mid_volume" 
+                                       min="0" 
+                                       max="100" 
+                                       step="1" 
+                                       value="50"
+                                       oninput="updateVolume('mid_display', this.value)" 
+                                       class="flex-1 h-2 bg-gray-200 dark:bg-gray-600 rounded-full appearance-none cursor-pointer">
+                                <span id="mid_display" class="text-lg font-semibold min-w-[3rem] text-center">50</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- High Frequency Test (4000 Hz) -->
+                    <div class="p-6 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                        <h3 class="text-xl font-semibold mb-4 flex items-center">
+                            <i data-lucide="wave-sine" class="h-5 w-5 mr-2 text-green-600 dark:text-green-400"></i>
+                            High Frequency (4000Hz)
+                        </h3>
+                        <div class="flex flex-col md:flex-row md:items-center gap-4">
+                            <button type="button" 
+                                    onclick="playSound(4000)" 
+                                    class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition flex items-center justify-center">
+                                <i data-lucide="play" class="h-4 w-4 mr-2"></i>
+                                Play 4000Hz
+                            </button>
+                            <div class="flex-1 flex items-center gap-4">
+                                <input type="range" 
+                                       id="high_volume" 
+                                       name="high_volume" 
+                                       min="0" 
+                                       max="100" 
+                                       step="1" 
+                                       value="50"
+                                       oninput="updateVolume('high_display', this.value)" 
+                                       class="flex-1 h-2 bg-gray-200 dark:bg-gray-600 rounded-full appearance-none cursor-pointer">
+                                <span id="high_display" class="text-lg font-semibold min-w-[3rem] text-center">50</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-end">
+                        <button type="submit" 
+                                class="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition flex items-center">
+                            <i data-lucide="check" class="h-5 w-5 mr-2"></i>
+                            Confirm and Save
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Additional Information -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+                <h2 class="text-2xl font-semibold mb-4">Why is the hearing test important?</h2>
+                <p class="text-gray-500 dark:text-gray-400 mb-4">
+                    The hearing test allows us to customize your audio experience according to your specific hearing capabilities.
+                    This ensures that you hear all the important details in your favorite content, regardless of frequency.
+                </p>
+                <p class="text-gray-500 dark:text-gray-400">
+                    We recommend taking this test every 3 months to keep your profile updated and optimize your listening experience.
+                </p>
+            </div>
+        </div>
+    </main>
 
-        <!-- Low Frequency Test (250 Hz) -->
-        <h3>Low Frequency (250Hz)</h3>
-        <button type="button" onclick="playSound(250)">Play 250Hz</button>
-        <input type="range" id="low_volume" name="low_volume" min="0" max="100" step="1" oninput="updateVolume('low_display', this.value)">
-        <span id="low_display">50</span>
-
-        <!-- Mid Frequency Test (1000 Hz) -->
-        <h3>Mid Frequency (1000Hz)</h3>
-        <button type="button" onclick="playSound(1000)">Play 1000Hz</button>
-        <input type="range" id="mid_volume" name="mid_volume" min="0" max="100" step="1" oninput="updateVolume('mid_display', this.value)">
-        <span id="mid_display">50</span>
-
-        <!-- High Frequency Test (4000 Hz) -->
-        <h3>High Frequency (4000Hz)</h3>
-        <button type="button" onclick="playSound(4000)">Play 4000Hz</button>
-        <input type="range" id="high_volume" name="high_volume" min="0" max="100" step="1" oninput="updateVolume('high_display', this.value)">
-        <span id="high_display">50</span>
-
-        <button type="submit">Confirm and Save</button>
-    </form>
+    <!-- Footer -->
+    <footer class="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t">
+        <p class="text-xs text-gray-500 dark:text-gray-400">© 2025 WaveHeaven. All rights reserved.</p>
+        <nav class="sm:ml-auto flex gap-4 sm:gap-6">
+            <a class="text-xs hover:underline underline-offset-4" href="#">Terms of Service</a>
+            <a class="text-xs hover:underline underline-offset-4" href="#">Privacy Policy</a>
+        </nav>
+    </footer>
 
     <script>
+        // Dark mode toggle
+        document.getElementById('darkModeToggle').addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+        });
+
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Update volume display
         function updateVolume(displayId, value) {
             document.getElementById(displayId).innerText = value;
         }
 
+        // Play sound function
         function playSound(frequency) {
             const audioContext = new (window.AudioContext || window.webkitAudioContext)();
             const oscillator = audioContext.createOscillator();
             const gainNode = audioContext.createGain();
 
+            // Get the volume value based on frequency
+            let volumeId;
+            if (frequency === 250) volumeId = 'low_volume';
+            else if (frequency === 1000) volumeId = 'mid_volume';
+            else if (frequency === 4000) volumeId = 'high_volume';
+            
+            const volumeValue = document.getElementById(volumeId).value;
+            const normalizedVolume = volumeValue / 100 * 0.3; // Max volume of 0.3 to prevent too loud sounds
+
             oscillator.type = "sine";
             oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
-            gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);  // Volumen inicial bajo
+            
+            // Fade in
+            gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+            gainNode.gain.linearRampToValueAtTime(normalizedVolume, audioContext.currentTime + 0.1);
+            
+            // Fade out
+            gainNode.gain.setValueAtTime(normalizedVolume, audioContext.currentTime + 1.9);
+            gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 2);
 
             oscillator.connect(gainNode);
             gainNode.connect(audioContext.destination);
 
+            // Update button to show playing state
+            const buttonId = frequency === 250 ? 0 : (frequency === 1000 ? 1 : 2);
+            const buttons = document.querySelectorAll('button[onclick^="playSound"]');
+            const button = buttons[buttonId];
+            const originalHTML = button.innerHTML;
+            
+            button.innerHTML = `<i data-lucide="pause" class="h-4 w-4 mr-2"></i> Playing...`;
+            lucide.createIcons();
+            button.disabled = true;
+            
             oscillator.start();
-            setTimeout(() => oscillator.stop(), 2000);  // Sonido dura 2 segundos
+            
+            setTimeout(() => {
+                oscillator.stop();
+                button.innerHTML = originalHTML;
+                lucide.createIcons();
+                button.disabled = false;
+            }, 2000);  // Sound lasts 2 seconds
         }
     </script>
 </body>
