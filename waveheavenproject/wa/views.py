@@ -1,7 +1,10 @@
 from django.http import JsonResponse, HttpResponseNotAllowed
 from django.views.decorators.csrf import csrf_exempt
 import json
-from django.shortcuts import render
+from django.shortcuts import render, redirect
+from django.contrib.auth import authenticate, login, logout
+from .forms import UserRegisterForm, DeviceForm
+from .models import Device
 from wa.models import UserPreferences
 from django.contrib.auth.models import User  # Importar modelo de usuario
 
@@ -81,4 +84,44 @@ def set_sound_category(request):
 
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
-    
+
+
+def user_register(request):
+    if request.method == "POST":
+        user_form = UserRegisterForm(request.POST)
+        device_form = DeviceForm(request.POST)
+        if user_form.is_valid() and device_form.is_valid():
+            user = user_form.save(commit=False)
+            user.set_password(user_form.cleaned_data["password"])
+            user.save()
+
+            # Guardar la información del dispositivo
+            device = device_form.save(commit=False)
+            device.user = user
+            device.save()
+
+            login(request, user)  # Autenticamos automáticamente después del registro
+            return redirect("dashboard")
+    else:
+        user_form = UserRegisterForm()
+        device_form = DeviceForm()
+    return render(request, "register.html", {"user_form": user_form, "device_form": device_form})
+
+def user_login(request):
+    if request.method == "POST":
+        username = request.POST["username"]
+        password = request.POST["password"]
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            return redirect("dashboard")
+        else:
+            return render(request, "login.html", {"error": "Invalid username or password"})
+    return render(request, "login.html")
+
+def user_logout(request):
+    logout(request)
+    return redirect("login")
+
+def user_dashboard(request):
+    return render(request, "dashboard.html")
