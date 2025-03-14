@@ -1,8 +1,12 @@
 from django.db import models
-from django.contrib.auth.models import User
 
 class UserPreferences(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    id_user = models.AutoField(primary_key=True)  # ID del usuario (ahora es la PK)
+    name = models.CharField(max_length=150)  # Nombre del usuario
+    email = models.EmailField(unique=True)  # Email del usuario, debe ser único
+    audio_settings = models.TextField(blank=True, null=True)  # Preferencias de audio
+    usage_history = models.TextField(blank=True, null=True)  # Historial de uso
+
     ideal_volume = models.FloatField(default=50.0)  
     microphone_active = models.BooleanField(default=False)
     last_adjusted_volume = models.FloatField(default=50.0)
@@ -22,8 +26,11 @@ class UserPreferences(models.Model):
         default='music'
     )
 
+    def __str__(self):
+        return f"{self.name} ({self.email})"
+
 class Device(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)  # Relación con User
+    user = models.ForeignKey(UserPreferences, on_delete=models.CASCADE)  # Relación con UserPreferences
     type = models.CharField(max_length=100)
     version = models.CharField(max_length=100)
     headphone_compatibility = models.BooleanField(default=False)
@@ -32,28 +39,28 @@ class Device(models.Model):
         return f"{self.type} - {self.version} ({'Compatible' if self.headphone_compatibility else 'Not Compatible'})"
 
 class AudioAdjustmentRecord(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(UserPreferences, on_delete=models.CASCADE)
     recommended_volume = models.IntegerField()
     detected_noise = models.IntegerField()
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Record {self.id} - User {self.user.username}"
+        return f"Record {self.id} - User {self.user.name}"
 
 class ExposureReport(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(UserPreferences, on_delete=models.CASCADE)
     total_exposure_time = models.IntegerField()  # En segundos o minutos
     trends = models.TextField(blank=True, null=True)
 
     def __str__(self):
-        return f"Exposure Report {self.id} - User {self.user.username}"
+        return f"Exposure Report {self.id} - User {self.user.name}"
 
 class HearingRiskNotification(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(UserPreferences, on_delete=models.CASCADE)
     report = models.ForeignKey(ExposureReport, on_delete=models.CASCADE)
     warning_type = models.CharField(max_length=100)  # Ej: "High Noise Exposure"
     date_and_time = models.DateTimeField(auto_now_add=True)
     exposure_threshold = models.IntegerField()  # Tiempo de exposición antes de la alerta
 
     def __str__(self):
-        return f"Notification {self.id} - {self.warning_type} - User {self.user.username}"
+        return f"Notification {self.id} - {self.warning_type} - User {self.user.name}"
