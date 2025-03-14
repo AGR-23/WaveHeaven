@@ -24,8 +24,7 @@
     </script>
 </head>
 
-<body
-    class="flex flex-col min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
+<body class="flex flex-col min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
     <header class="px-4 lg:px-6 h-14 flex items-center">
         <a href="#" class="flex items-center justify-center">
             <i data-lucide="audio-waveform" class="h-6 w-6"></i>
@@ -35,6 +34,15 @@
             <a href="#features" class="text-sm font-medium hover:underline underline-offset-4">Features</a>
             <a href="#how-it-works" class="text-sm font-medium hover:underline underline-offset-4">How It Works</a>
             <a href="#demo" class="text-sm font-medium hover:underline underline-offset-4">Demo</a>
+
+            {% if user.is_authenticated %}
+                <a href="{% url 'dashboard' %}" class="text-sm font-medium hover:underline underline-offset-4">Dashboard</a>
+                <a href="{% url 'logout' %}" class="text-sm font-medium hover:underline underline-offset-4">Logout</a>
+            {% else %}
+                <a href="{% url 'login' %}" class="px-4 py-2 bg-blue-600 text-white rounded text-sm font-medium">Login</a>
+                <a href="{% url 'register' %}" class="px-4 py-2 bg-green-600 text-white rounded text-sm font-medium">Register</a>
+            {% endif %}
+
             <button id="darkModeToggle" class="text-sm font-medium hover:underline underline-offset-4">
                 <i data-lucide="sun" class="h-5 w-5 dark:hidden"></i>
                 <i data-lucide="moon" class="h-5 w-5 hidden dark:inline"></i>
@@ -42,6 +50,7 @@
             </button>
         </nav>
     </header>
+
 
     </header>
     <main class="flex-1">

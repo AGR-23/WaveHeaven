@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hearing Test</title>
+</head>
+<body>
+    <h2>Hearing Test</h2>
+    <p>Adjust the volume for each frequency until you can barely hear the sound.</p>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <!-- Low Frequency Test (250 Hz) -->
+        <h3>Low Frequency (250Hz)</h3>
+        <button type="button" onclick="playSound(250)">Play 250Hz</button>
+        <input type="range" id="low_volume" name="low_volume" min="0" max="100" step="1" oninput="updateVolume('low_display', this.value)">
+        <span id="low_display">50</span>
+
+        <!-- Mid Frequency Test (1000 Hz) -->
+        <h3>Mid Frequency (1000Hz)</h3>
+        <button type="button" onclick="playSound(1000)">Play 1000Hz</button>
+        <input type="range" id="mid_volume" name="mid_volume" min="0" max="100" step="1" oninput="updateVolume('mid_display', this.value)">
+        <span id="mid_display">50</span>
+
+        <!-- High Frequency Test (4000 Hz) -->
+        <h3>High Frequency (4000Hz)</h3>
+        <button type="button" onclick="playSound(4000)">Play 4000Hz</button>
+        <input type="range" id="high_volume" name="high_volume" min="0" max="100" step="1" oninput="updateVolume('high_display', this.value)">
+        <span id="high_display">50</span>
+
+        <button type="submit">Confirm and Save</button>
+    </form>
+
+    <script>
+        function updateVolume(displayId, value) {
+            document.getElementById(displayId).innerText = value;
+        }
+
+        function playSound(frequency) {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.type = "sine";
+            oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+            gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);  // Volumen inicial bajo
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            oscillator.start();
+            setTimeout(() => oscillator.stop(), 2000);  // Sonido dura 2 segundos
+        }
+    </script>
+</body>
+</html>

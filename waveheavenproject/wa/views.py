@@ -95,17 +95,36 @@ def user_register(request):
             user.set_password(user_form.cleaned_data["password"])
             user.save()
 
-            # Guardar la información del dispositivo
             device = device_form.save(commit=False)
             device.user = user
             device.save()
 
-            login(request, user)  # Autenticamos automáticamente después del registro
-            return redirect("dashboard")
+            login(request, user)
+
+            return redirect("hearing_test") 
+
     else:
         user_form = UserRegisterForm()
         device_form = DeviceForm()
+    
     return render(request, "register.html", {"user_form": user_form, "device_form": device_form})
+
+def hearing_test(request):
+    if request.method == "POST":
+        low_volume = request.POST.get("low_volume", 50)
+        mid_volume = request.POST.get("mid_volume", 50)
+        high_volume = request.POST.get("high_volume", 50)
+
+        if request.user.is_authenticated:
+            user_prefs, created = UserPreferences.objects.get_or_create(user=request.user)
+            # Guardamos el volumen promedio de las pruebas como el ideal
+            user_prefs.ideal_volume = (int(low_volume) + int(mid_volume) + int(high_volume)) / 3
+            user_prefs.save()
+
+            return redirect("dashboard")  # Redirigir al dashboard
+
+    return render(request, "hearing_test.html")
+
 
 def user_login(request):
     if request.method == "POST":
@@ -118,6 +137,7 @@ def user_login(request):
         else:
             return render(request, "login.html", {"error": "Invalid username or password"})
     return render(request, "login.html")
+
 
 def user_logout(request):
     logout(request)

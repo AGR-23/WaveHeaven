@@ -6,7 +6,11 @@ from wa.views import (
     toggle_microphone, 
     adjust_volume, 
     set_sound_category, 
-    user_register
+    user_register,
+    user_dashboard,
+    user_login,
+    user_logout,
+    hearing_test
 )
 
 urlpatterns = [
@@ -17,12 +21,16 @@ urlpatterns = [
     path('', home, name='home'),
 
     # Rutas de autenticación
-    path('login/', auth_views.LoginView.as_view(template_name='wa/login.html'), name='login'),
-    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+    path('login/', user_login, name='login'),
+    path('logout/', user_logout, name='logout'),
     path('register/', user_register, name='register'),
 
     # API endpoints
     path('api/toggle_microphone/', toggle_microphone, name='toggle_microphone'),
     path('api/adjust_volume/', adjust_volume, name='adjust_volume'),
     path('api/set_sound_category/', set_sound_category, name='set_sound_category'),
+    path("dashboard/", user_dashboard, name="dashboard"),
+    path("hearing-test/", hearing_test, name="hearing_test"),
+
+
 ]

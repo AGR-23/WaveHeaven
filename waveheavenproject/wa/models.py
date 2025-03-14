@@ -2,11 +2,14 @@ from django.db import models
 from django.contrib.auth.models import User
 
 class UserPreferences(models.Model):
-    # Campos existentes
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    ideal_volume = models.FloatField(default=50.0)
+    ideal_volume = models.FloatField(default=50.0)  
     microphone_active = models.BooleanField(default=False)
     last_adjusted_volume = models.FloatField(default=50.0)
+
+    low_freq_threshold = models.FloatField(default=50.0)  # 250Hz
+    mid_freq_threshold = models.FloatField(default=50.0)  # 1000Hz
+    high_freq_threshold = models.FloatField(default=50.0)  # 4000Hz
 
     SOUND_CATEGORIES = [
         ('music', 'Música'),
