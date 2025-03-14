@@ -1,16 +1,178 @@
+{% load static %}
 <!DOCTYPE html>
-<html>
+<html lang="en" class="light">
 <head>
-    <title>Register</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WaveHeaven - Register</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            DEFAULT: '#3b82f6',
+                            dark: '#60a5fa',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom styling for Django form errors */
+        .errorlist {
+            color: #ef4444;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+            list-style-type: none;
+            padding-left: 0;
+        }
+        
+        /* Custom styling for form paragraphs */
+        form p {
+            margin-bottom: 1.5rem;
+        }
+        
+        /* Style form labels */
+        form label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+        
+        /* Style form inputs */
+        form input, form select {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            background-color: #f9fafb;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            outline: none;
+        }
+        
+        /* Dark mode styles */
+        .dark form input, .dark form select {
+            background-color: #374151;
+            border-color: #4b5563;
+            color: #f9fafb;
+        }
+        
+        /* Focus styles */
+        form input:focus, form select:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+        }
+    </style>
 </head>
-<body>
-    <h2>Register</h2>
-    <form method="post">
-        {% csrf_token %}
-        {{ user_form.as_p }}
-        {{ device_form.as_p }}
-        <button type="submit">Register</button>
-    </form>
-    <a href="{% url 'login' %}">Already have an account? Login</a>
+<body class="flex flex-col min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
+    <!-- Header -->
+    <header class="px-4 lg:px-6 h-14 flex items-center border-b">
+        <a href="/" class="flex items-center justify-center">
+            <i data-lucide="audio-waveform" class="h-6 w-6 text-blue-600 dark:text-blue-400"></i>
+            <span class="ml-2 text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-500">
+                WaveHeaven
+            </span>
+        </a>
+        <nav class="ml-auto flex gap-4 sm:gap-6">
+            <button id="darkModeToggle" class="text-sm font-medium hover:underline underline-offset-4">
+                <i data-lucide="sun" class="h-5 w-5 dark:hidden"></i>
+                <i data-lucide="moon" class="h-5 w-5 hidden dark:inline"></i>
+                <span class="sr-only">Toggle mode</span>
+            </button>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex items-center justify-center p-6">
+        <div class="w-full max-w-2xl">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8">
+                <div class="flex justify-center mb-6">
+                    <div class="h-16 w-16 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                        <i data-lucide="user-plus" class="h-8 w-8 text-blue-600 dark:text-blue-400"></i>
+                    </div>
+                </div>
+                
+                <h2 class="text-2xl font-bold text-center mb-6">Create Your WaveHeaven Account</h2>
+                
+                <form method="post" class="space-y-6">
+                    {% csrf_token %}
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h3 class="text-lg font-semibold mb-4 flex items-center">
+                                <i data-lucide="user" class="h-5 w-5 mr-2 text-blue-600 dark:text-blue-400"></i>
+                                Personal Information
+                            </h3>
+                            <div class="space-y-4">
+                                {{ user_form.as_p }}
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h3 class="text-lg font-semibold mb-4 flex items-center">
+                                <i data-lucide="headphones" class="h-5 w-5 mr-2 text-blue-600 dark:text-blue-400"></i>
+                                Device Information
+                            </h3>
+                            <div class="space-y-4">
+                                {{ device_form.as_p }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="pt-4">
+                        <button 
+                            type="submit" 
+                            class="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition flex items-center justify-center"
+                        >
+                            <i data-lucide="user-check" class="h-5 w-5 mr-2"></i>
+                            Create Account
+                        </button>
+                    </div>
+                </form>
+                
+                <div class="mt-6 text-center">
+                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                        Already have an account? 
+                        <a href="{% url 'login' %}" class="text-blue-600 dark:text-blue-400 hover:underline">
+                            Login here
+                        </a>
+                    </p>
+                </div>
+                
+                <div class="mt-8 text-sm text-gray-500 dark:text-gray-400">
+                    <p class="mb-2">By creating an account, you agree to our:</p>
+                    <div class="flex justify-center space-x-4">
+                        <a href="#" class="text-blue-600 dark:text-blue-400 hover:underline">Terms of Service</a>
+                        <span>&bull;</span>
+                        <a href="#" class="text-blue-600 dark:text-blue-400 hover:underline">Privacy Policy</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t">
+        <p class="text-xs text-gray-500 dark:text-gray-400">© 2025 WaveHeaven. All rights reserved.</p>
+        <nav class="sm:ml-auto flex gap-4 sm:gap-6">
+            <a class="text-xs hover:underline underline-offset-4" href="#">Terms of Service</a>
+            <a class="text-xs hover:underline underline-offset-4" href="#">Privacy Policy</a>
+        </nav>
+    </footer>
+
+    <script>
+        // Dark mode toggle
+        document.getElementById('darkModeToggle').addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+        });
+
+        // Initialize Lucide icons
+        lucide.createIcons();
+    </script>
 </body>
 </html>

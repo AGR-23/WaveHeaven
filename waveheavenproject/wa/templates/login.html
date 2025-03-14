@@ -1,24 +1,154 @@
+{% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="light">
 <head>
-    <title>Login</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WaveHeaven - Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            DEFAULT: '#3b82f6',
+                            dark: '#60a5fa',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
 </head>
-<body>
-    <h2>Login</h2>
-    {% if error %}
-        <p style="color: red;">{{ error }}</p>
-    {% endif %}
-    <form method="post">
-        {% csrf_token %}
-        <label for="username">Username:</label>
-        <input type="text" name="username" required><br>
+<body class="flex flex-col min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
+    <!-- Header -->
+    <header class="px-4 lg:px-6 h-14 flex items-center border-b">
+        <a href="/" class="flex items-center justify-center">
+            <i data-lucide="audio-waveform" class="h-6 w-6 text-blue-600 dark:text-blue-400"></i>
+            <span class="ml-2 text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-500">
+                WaveHeaven
+            </span>
+        </a>
+        <nav class="ml-auto flex gap-4 sm:gap-6">
+            <button id="darkModeToggle" class="text-sm font-medium hover:underline underline-offset-4">
+                <i data-lucide="sun" class="h-5 w-5 dark:hidden"></i>
+                <i data-lucide="moon" class="h-5 w-5 hidden dark:inline"></i>
+                <span class="sr-only">Toggle mode</span>
+            </button>
+        </nav>
+    </header>
 
-        <label for="password">Password:</label>
-        <input type="password" name="password" required><br>
+    <!-- Main Content -->
+    <main class="flex-1 flex items-center justify-center p-6">
+        <div class="w-full max-w-md">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8">
+                <div class="flex justify-center mb-6">
+                    <div class="h-16 w-16 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                        <i data-lucide="user" class="h-8 w-8 text-blue-600 dark:text-blue-400"></i>
+                    </div>
+                </div>
+                
+                <h2 class="text-2xl font-bold text-center mb-6">Login to WaveHeaven</h2>
+                
+                {% if error %}
+                    <div class="bg-red-50 dark:bg-red-900/30 border-l-4 border-red-500 p-4 mb-6">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <i data-lucide="alert-circle" class="h-5 w-5 text-red-500"></i>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm text-red-700 dark:text-red-300">{{ error }}</p>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+                
+                <form method="post" class="space-y-6">
+                    {% csrf_token %}
+                    
+                    <div>
+                        <label for="username" class="block text-sm font-medium mb-2">Username</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i data-lucide="user" class="h-5 w-5 text-gray-400"></i>
+                            </div>
+                            <input 
+                                type="text" 
+                                id="username" 
+                                name="username" 
+                                required 
+                                class="pl-10 w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                                placeholder="Enter your username"
+                            >
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label for="password" class="block text-sm font-medium mb-2">Password</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i data-lucide="lock" class="h-5 w-5 text-gray-400"></i>
+                            </div>
+                            <input 
+                                type="password" 
+                                id="password" 
+                                name="password" 
+                                required 
+                                class="pl-10 w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                                placeholder="Enter your password"
+                            >
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <button 
+                            type="submit" 
+                            class="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition flex items-center justify-center"
+                        >
+                            <i data-lucide="log-in" class="h-5 w-5 mr-2"></i>
+                            Login
+                        </button>
+                    </div>
+                </form>
+                
+                <div class="mt-6 text-center">
+                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                        Don't have an account? 
+                        <a href="{% url 'register' %}" class="text-blue-600 dark:text-blue-400 hover:underline">
+                            Register here
+                        </a>
+                    </p>
+                </div>
+                
+                <div class="mt-4 text-center">
+                    <a href="#" class="text-sm text-gray-500 dark:text-gray-400 hover:underline">
+                        Forgot your password?
+                    </a>
+                </div>
+            </div>
+        </div>
+    </main>
 
-        <button type="submit">Login</button>
-    </form>
+    <!-- Footer -->
+    <footer class="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t">
+        <p class="text-xs text-gray-500 dark:text-gray-400">© 2025 WaveHeaven. All rights reserved.</p>
+        <nav class="sm:ml-auto flex gap-4 sm:gap-6">
+            <a class="text-xs hover:underline underline-offset-4" href="#">Terms of Service</a>
+            <a class="text-xs hover:underline underline-offset-4" href="#">Privacy Policy</a>
+        </nav>
+    </footer>
 
-    <p>Don't have an account? <a href="{% url 'register' %}">Register here</a></p>
+    <script>
+        // Dark mode toggle
+        document.getElementById('darkModeToggle').addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+        });
+
+        // Initialize Lucide icons
+        lucide.createIcons();
+    </script>
 </body>
 </html>
