@@ -4,6 +4,7 @@ from django.shortcuts import render
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from wa.models import UserPreferences
+from .models import UserStatistics, ExposureReport
 from .forms import SoundProfileForm
 
 @login_required
@@ -63,3 +64,17 @@ def edit_profile(request, profile_index):
     else:
         form = SoundProfileForm(initial=profile)
     return render(request, 'profiles/edit_profile.html', {'form': form, 'profile_index': profile_index})
+
+@login_required
+def user_statistics(request):
+    # Ensure we get the UserPreferences instance
+    user_prefs = get_object_or_404(UserPreferences, user=request.user)
+
+    # Retrieve the user's exposure report (if it exists)
+    exposure_report = ExposureReport.objects.filter(user=user_prefs).first()
+
+    # Pass data to the template
+    return render(request, 'statistics.html', {
+        'user_prefs': user_prefs,
+        'exposure_report': exposure_report,
+    })

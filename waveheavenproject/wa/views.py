@@ -125,7 +125,6 @@ def hearing_test(request):
 
     return render(request, "hearing_test.html")
 
-
 def user_login(request):
     if request.method == "POST":
         username = request.POST["username"]
@@ -133,15 +132,16 @@ def user_login(request):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            return redirect("dashboard")
+            return redirect("dashboard")  # Redirects to profiles after login
         else:
             return render(request, "login.html", {"error": "Invalid username or password"})
     return render(request, "login.html")
-
 
 def user_logout(request):
     logout(request)
     return redirect("login")
 
 def user_dashboard(request):
-    return render(request, "dashboard.html")
+    user_prefs, _ = UserPreferences.objects.get_or_create(user=request.user)
+    profiles = user_prefs.get_audio_profiles()
+    return render(request, "dashboard.html", {"profiles": profiles})

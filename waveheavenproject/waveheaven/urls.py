@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.urls import include
 from django.urls import path
 from django.contrib.auth import views as auth_views
 from wa.views import (
@@ -13,6 +14,7 @@ from wa.views import (
     hearing_test
 )
 from profiles import views
+from profiles.views import user_statistics
 
 urlpatterns = [
     # Panel de administración de Django
@@ -34,8 +36,9 @@ urlpatterns = [
     path("hearing-test/", hearing_test, name="hearing_test"),
     
     # Rutas de función Sound Profile
-     path('profiles', views.list_profiles, name='list_profiles'),
+    path('profiles/', views.list_profiles, name='list_profiles'),
     path('create/', views.create_profile, name='create_profile'),
     path('edit/<int:profile_id>/', views.edit_profile, name='edit_profile'),
     path('apply/<int:profile_id>/', views.apply_profile, name='apply_profile'),
+    path('statistics/', user_statistics, name='user_statistics'),
 ]
