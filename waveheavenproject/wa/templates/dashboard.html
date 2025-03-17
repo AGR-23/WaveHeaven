@@ -35,7 +35,7 @@
             </span>
         </a>
         <nav class="ml-auto flex gap-4 sm:gap-6">
-            <a href="{% url 'list_profiles' %}" class="text-sm font-medium hover:underline underline-offset-4">Sound Profiles</a>
+            <a href="{% url 'profiles_page' %}" class="text-sm font-medium hover:underline underline-offset-4">Sound Profiles</a>
             <a href="{% url 'user_statistics' %}" class="text-sm font-medium hover:underline underline-offset-4">Statistics</a>
             <a href="{% url 'hearing_test' %}" class="text-sm font-medium hover:underline underline-offset-4">Hearing Test</a>
             <a href="{% url 'logout' %}" class="text-sm font-medium text-red-500 hover:underline underline-offset-4">Logout</a>
@@ -52,7 +52,7 @@
 
             <!-- Feature Boxes -->
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-12">
-                <a href="{% url 'list_profiles' %}" class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md text-center hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+                <a href="{% url 'profiles_page' %}" class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md text-center hover:bg-gray-100 dark:hover:bg-gray-700 transition">
                     <i data-lucide="music" class="h-10 w-10 mx-auto text-blue-600"></i>
                     <h3 class="text-lg font-semibold mt-4">🎵 Sound Profiles</h3>
                     <p class="text-gray-500 dark:text-gray-400">Manage your personalized sound profiles.</p>
@@ -94,10 +94,10 @@
                     <div class="mt-6">
                         <label for="soundProfile" class="text-lg font-semibold">Select a Sound Profile:</label>
                         <select id="soundProfile" class="px-4 py-2 border rounded">
-                            {% for profile in user.soundprofile_set.all %}
-                                <option value="{{ profile.id }}">{{ profile.name }}</option>
+                            {% for profile in user_prefs.audio_profiles %}
+                            <option value="{{ profile.name }}">{{ profile.name }}</option>
                             {% empty %}
-                                <option disabled>No sound profiles available</option>
+                            <option disabled>No sound profiles available</option>
                             {% endfor %}
                         </select>
                         <button onclick="applySoundProfile()" class="px-4 py-2 bg-blue-600 text-white rounded mt-2">
@@ -118,29 +118,50 @@
     </footer>
 
     <script>
-        function applySoundProfile() {
-            let selectedProfile = document.getElementById("soundProfile").value;
-            if (!selectedProfile) {
-                alert("Please select a sound profile.");
-                return;
-            }
+        // Función para aplicar un perfil de sonido
+        async function applySoundProfile() {
+            const selectedProfileName = document.getElementById("soundProfile").value;
 
-            fetch(`/apply/${selectedProfile}/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken'),
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
+            try {
+                const response = await fetch(`/apply_profile/${selectedProfileName}/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken'),
+                    }
+                });
+
+                const data = await response.json();
+
                 if (data.status === "success") {
-                    alert(`Applied sound profile: ${data.profile_name}`);
+                    applyAudioSettings(data.profile);  // Aplicar ajustes de audio
+                    alert(`Profile "${selectedProfileName}" applied successfully!`);
+                } else {
+                    alert("Failed to apply profile.");
                 }
-            })
-            .catch(error => console.error("Error applying sound profile:", error));
+            } catch (error) {
+                console.error("Error applying profile:", error);
+                alert("An error occurred while applying the profile.");
+            }
         }
 
+        // Función para aplicar ajustes de audio
+        function applyAudioSettings(profile) {
+            const globalAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+            // Crea un ecualizador
+            const equalizer = globalAudioContext.createBiquadFilter();
+            equalizer.type = "peaking";
+            equalizer.frequency.value = 1000;  // Frecuencia central
+            equalizer.gain.value = profile.bass;  // Ajuste de graves (ejemplo)
+
+            // Conecta a la fuente de audio
+            const source = globalAudioContext.createMediaElementSource(audioElement);
+            source.connect(equalizer);
+            equalizer.connect(globalAudioContext.destination);
+        }
+
+        // Función para obtener el token CSRF
         function getCookie(name) {
             let cookieValue = null;
             if (document.cookie && document.cookie !== '') {
@@ -157,241 +178,204 @@
         }
 
         let audioContext;
-    let analyser;
-    let microphone;
-    let dataArray;
-    let isListening = false;
-    let ambientVolumeDisplay = document.getElementById("ambientVolumeDisplay");
-    let activeTabId = null;
-    let globalAudioContext = new (window.AudioContext || window.webkitAudioContext)();
-    let gainNode = globalAudioContext.createGain(); // Controlador de volumen
-    let exposureStartTime = null;
-    let exposureThreshold = 5 * 1000; // 5 seconds in milliseconds (just to test later it should be 10 minutes)
-    let warningTriggered = false;
+        let analyser;
+        let microphone;
+        let dataArray;
+        let isListening = false;
+        let ambientVolumeDisplay = document.getElementById("ambientVolumeDisplay");
+        let activeTabId = null;
+        let globalAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+        let gainNode = globalAudioContext.createGain(); // Controlador de volumen
+        let exposureStartTime = null;
+        let exposureThreshold = 5 * 1000; // 5 seconds in milliseconds (just to test later it should be 10 minutes)
+        let warningTriggered = false;
 
+        // Inicializar los iconos de Lucide
+        lucide.createIcons();
 
-    // Inicializar los iconos de Lucide
-    lucide.createIcons();
+        async function captureAudioFromTabs() {
+            try {
+                const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true }); // Acceso a pestaña
+                const audioTrack = stream.getAudioTracks()[0]; // Acceso a la pista de la pestaña
 
-    async function captureAudioFromTabs() {
-        try {
-            const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true }); // Acceso a pestaña
-            const audioTrack = stream.getAudioTracks()[0]; // Acceso a la pista de la pestaña
-
-            if (!audioTrack) {
-                throw new Error("No se detectó audio en la pestaña seleccionada.");
-            }
-
-            const audioSource = globalAudioContext.createMediaStreamSource(new MediaStream([audioTrack])); // Conversion pista-audio
-            audioSource.connect(gainNode).connect(globalAudioContext.destination);  // Solo el audio de la pestaña se reproduce
-
-            console.log("Capturando audio de la pestaña activa...");
-        } catch (error) {
-            console.error("No se pudo capturar el audio de la pestaña:", error);
-            alert("Asegúrate de compartir una pestaña con audio cuando se te pida.");
-        }
-    }
-    async function startListening() {
-        if (isListening) return;
-        isListening = true;
-
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true }); // Acceso al microfono
-            audioContext = new AudioContext(); // Instanciacón de un contexto 
-            analyser = audioContext.createAnalyser(); // Analiza las frecuencias del microfono
-            microphone = audioContext.createMediaStreamSource(stream);
-            microphone.connect(analyser);  // Solo conectamos al analyser, NO al destino
-            analyser.fftSize = 256; // Resolución de la frecuencia
-            dataArray = new Uint8Array(analyser.frequencyBinCount);
-            analyzeAudio(); // Bucle de analisis
-
-            // También capturamos el audio de las pestañas abiertas
-            await captureAudioFromTabs();
-        } catch (error) {
-            console.error("Error al acceder al micrófono:", error);
-            alert("No se pudo acceder al micrófono. Verifica los permisos.");
-        }
-    }
-
-    function stopListening() {
-        if (!isListening) return;
-        isListening = false;
-        if (audioContext) {
-            audioContext.close();
-        }
-        ambientVolumeDisplay.textContent = "Ambient Volume: --";
-    }
-
-    function analyzeAudio() {
-        if (!isListening) return;
-        analyser.getByteFrequencyData(dataArray); // Obtiene datos de la frecuencia
-
-        let volume = dataArray.reduce((sum, val) => sum + val, 0) / dataArray.length; // Calcula volumen promedio
-
-        ambientVolumeDisplay.textContent = `Volumen Ambiental: ${volume.toFixed(2)}`; // Muestra volumen en pantalla
-
-        adjustVolumeBasedOnAmbient(volume); // La pestaña se ajusta segun el ruido detectado
-        checkNoiseExposure(volume); // Check for prolonged exposure
-
-        requestAnimationFrame(analyzeAudio); // Se llama en bucle
-    }
-
-    function updateSoundCategory() {
-        const category = document.getElementById('soundCategory').value;
-        fetch('/set_sound_category/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCookie('csrftoken'),
-            },
-            body: JSON.stringify({ category: category }),
-        })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    alert('Updated category: ' + data.category);
+                if (!audioTrack) {
+                    throw new Error("No se detectó audio en la pestaña seleccionada.");
                 }
-            })
-            .catch(error => console.error('Error:', error));
-    }
 
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.startsWith(name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                const audioSource = globalAudioContext.createMediaStreamSource(new MediaStream([audioTrack])); // Conversion pista-audio
+                audioSource.connect(gainNode).connect(globalAudioContext.destination);  // Solo el audio de la pestaña se reproduce
+
+                console.log("Capturando audio de la pestaña activa...");
+            } catch (error) {
+                console.error("No se pudo capturar el audio de la pestaña:", error);
+                alert("Asegúrate de compartir una pestaña con audio cuando se te pida.");
+            }
+        }
+
+        async function startListening() {
+            if (isListening) return;
+            isListening = true;
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true }); // Acceso al microfono
+                audioContext = new AudioContext(); // Instanciacón de un contexto 
+                analyser = audioContext.createAnalyser(); // Analiza las frecuencias del microfono
+                microphone = audioContext.createMediaStreamSource(stream);
+                microphone.connect(analyser);  // Solo conectamos al analyser, NO al destino
+                analyser.fftSize = 256; // Resolución de la frecuencia
+                dataArray = new Uint8Array(analyser.frequencyBinCount);
+                analyzeAudio(); // Bucle de analisis
+
+                // También capturamos el audio de las pestañas abiertas
+                await captureAudioFromTabs();
+            } catch (error) {
+                console.error("Error al acceder al micrófono:", error);
+                alert("No se pudo acceder al micrófono. Verifica los permisos.");
+            }
+        }
+
+        function stopListening() {
+            if (!isListening) return;
+            isListening = false;
+            if (audioContext) {
+                audioContext.close();
+            }
+            ambientVolumeDisplay.textContent = "Ambient Volume: --";
+        }
+
+        function analyzeAudio() {
+            if (!isListening) return;
+            analyser.getByteFrequencyData(dataArray); // Obtiene datos de la frecuencia
+
+            let volume = dataArray.reduce((sum, val) => sum + val, 0) / dataArray.length; // Calcula volumen promedio
+
+            ambientVolumeDisplay.textContent = `Volumen Ambiental: ${volume.toFixed(2)}`; // Muestra volumen en pantalla
+
+            adjustVolumeBasedOnAmbient(volume); // La pestaña se ajusta segun el ruido detectado
+            checkNoiseExposure(volume); // Check for prolonged exposure
+
+            requestAnimationFrame(analyzeAudio); // Se llama en bucle
+        }
+
+        async function adjustVolumeBasedOnAmbient(ambientVolume) {
+            await ensureAudioContextIsRunning();  // Avoids errors when resuming the context
+
+            const categoryElement = document.getElementById('soundCategory');
+            if (!categoryElement) return; // Evades errors if the element is not found
+            const category = categoryElement.value;
+
+            let newVolume;
+
+            switch (category) {
+                case 'music':
+                    newVolume = ambientVolume > 50
+                        ? Math.max(0.3, 1.0 - (ambientVolume - 50) / 80)
+                        : 1.0;
                     break;
+                case 'podcast':
+                    newVolume = ambientVolume > 50
+                        ? Math.max(0.4, 0.8 - (ambientVolume - 50) / 120)
+                        : 0.8;
+                    break;
+                case 'call':
+                    newVolume = ambientVolume > 50
+                        ? Math.max(0.5, 1.2 - (ambientVolume - 50) / 90)
+                        : 1.0;
+                    break;
+                default:
+                    newVolume = 1.0;
+            }
+
+            newVolume = Math.max(0.1, Math.min(1, newVolume));
+
+            console.log(`Ambient Volume: ${ambientVolume}, Adjusted Volume: ${newVolume}`); // Show the volume in the console
+
+            gainNode.gain.cancelScheduledValues(globalAudioContext.currentTime);
+            gainNode.gain.setTargetAtTime(newVolume, globalAudioContext.currentTime, 0.5);
+
+            const volumeDisplay = document.getElementById("tabVolumeDisplay");
+            if (volumeDisplay) {
+                volumeDisplay.textContent = `${Math.round(newVolume * 100)}%`;
+                volumeDisplay.style.color = newVolume < 0.5 ? 'red' : 'green';
+            }
+
+            const volumeBar = document.getElementById("volumeBar");
+            if (volumeBar) {
+                volumeBar.setAttribute("value", newVolume);
+            }
+        }
+
+        async function ensureAudioContextIsRunning() {
+            if (globalAudioContext.state === 'suspended') {
+                await globalAudioContext.resume();
+                console.log('AudioContext resumed');
+            }
+        }
+
+        function checkNoiseExposure(ambientVolume) {
+            console.log('Pillando sonido: ' + ambientVolume);
+            const dBThreshold = 85; // 85 dB warning limit
+
+            if (ambientVolume >= dBThreshold) {
+                if (!exposureStartTime) {
+                    exposureStartTime = Date.now(); // Start tracking
                 }
-            }
-        }
-        return cookieValue;
-    }
 
-    async function connectToExtension() {
-        window.postMessage({ type: "CONNECT_TO_TAB", data: {} }, "*");
-    }
-
-    async function adjustVolumeBasedOnAmbient(ambientVolume) {
-        await ensureAudioContextIsRunning();  // Avoids errors when resuming the context
-
-        const categoryElement = document.getElementById('soundCategory');
-        if (!categoryElement) return; // Evades errors if the element is not found
-        const category = categoryElement.value;
-
-        let newVolume;
-
-        switch (category) {
-            case 'music':
-                newVolume = ambientVolume > 50
-                    ? Math.max(0.3, 1.0 - (ambientVolume - 50) / 80)
-                    : 1.0;
-                break;
-            case 'podcast':
-                newVolume = ambientVolume > 50
-                    ? Math.max(0.4, 0.8 - (ambientVolume - 50) / 120)
-                    : 0.8;
-                break;
-            case 'call':
-                newVolume = ambientVolume > 50
-                    ? Math.max(0.5, 1.2 - (ambientVolume - 50) / 90)
-                    : 1.0;
-                break;
-            default:
-                newVolume = 1.0;
-        }
-
-        newVolume = Math.max(0.1, Math.min(1, newVolume));
-
-        console.log(`Ambient Volume: ${ambientVolume}, Adjusted Volume: ${newVolume}`); // Show the volume in the console
-
-        gainNode.gain.cancelScheduledValues(globalAudioContext.currentTime);
-        gainNode.gain.setTargetAtTime(newVolume, globalAudioContext.currentTime, 0.5);
-
-        const volumeDisplay = document.getElementById("tabVolumeDisplay");
-        if (volumeDisplay) {
-            volumeDisplay.textContent = `${Math.round(newVolume * 100)}%`;
-            volumeDisplay.style.color = newVolume < 0.5 ? 'red' : 'green';
-        }
-
-        const volumeBar = document.getElementById("volumeBar");
-        if (volumeBar) {
-            volumeBar.setAttribute("value", newVolume);
-        }
-    }
-
-    async function ensureAudioContextIsRunning() {
-        if (globalAudioContext.state === 'suspended') {
-            await globalAudioContext.resume();
-            console.log('AudioContext resumed');
-        }
-    }
-
-    function checkNoiseExposure(ambientVolume) {
-        console.log('Pillando sonido: ' + ambientVolume);
-        const dBThreshold = 85; // 85 dB warning limit
-
-        if (ambientVolume >= dBThreshold) {
-            if (!exposureStartTime) {
-                exposureStartTime = Date.now(); // Start tracking
-            }
-
-            let elapsedTime = Date.now() - exposureStartTime; //how much time have passed since the exposure started
-            if (elapsedTime >= exposureThreshold && !warningTriggered) {
-                console.log('Warning: High noise exposure detected');
-                triggerWarning();
-                warningTriggered = true; // Prevent multiple warnings
-            }
-        } else {
-            exposureStartTime = null; // Reset if volume drops
-            warningTriggered = false;
-        }
-    }
-
-    function triggerWarning() {
-        if (Notification.permission === "granted") {
-            new Notification("⚠ High Noise Exposure", {
-                body: "You've been exposed to high noise levels (>85 dB) for over 10 minutes. Consider lowering the volume or taking a break.",
-                icon: "" // Replace with an actual icon
-            });
-        } else if (Notification.permission !== "denied") { // then request permission and then trigger the warning again
-            Notification.requestPermission().then(permission => {
-                if (permission === "granted") {
+                let elapsedTime = Date.now() - exposureStartTime; //how much time have passed since the exposure started
+                if (elapsedTime >= exposureThreshold && !warningTriggered) {
+                    console.log('Warning: High noise exposure detected');
                     triggerWarning();
+                    warningTriggered = true; // Prevent multiple warnings
                 }
-            });
-        } else {
-            alert("High Noise Exposure Warning: You've been listening to loud sounds for too long!");
+            } else {
+                exposureStartTime = null; // Reset if volume drops
+                warningTriggered = false;
+            }
         }
-    }
 
-    // Dark mode toggle functionality
-    function setTheme(isDark) {
-        if (isDark) {
-            document.documentElement.classList.add('dark');
-            localStorage.setItem('theme', 'dark');
-        } else {
-            document.documentElement.classList.remove('dark');
-            localStorage.setItem('theme', 'light');
+        function triggerWarning() {
+            if (Notification.permission === "granted") {
+                new Notification("⚠ High Noise Exposure", {
+                    body: "You've been exposed to high noise levels (>85 dB) for over 10 minutes. Consider lowering the volume or taking a break.",
+                    icon: "" // Replace with an actual icon
+                });
+            } else if (Notification.permission !== "denied") { // then request permission and then trigger the warning again
+                Notification.requestPermission().then(permission => {
+                    if (permission === "granted") {
+                        triggerWarning();
+                    }
+                });
+            } else {
+                alert("High Noise Exposure Warning: You've been listening to loud sounds for too long!");
+            }
         }
-    }
 
-    // Check for saved theme preference or use system preference
-    const savedTheme = localStorage.getItem('theme');
-    const systemDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        // Dark mode toggle functionality
+        function setTheme(isDark) {
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+            }
+        }
 
-    if (savedTheme === 'dark' || (!savedTheme && systemDarkMode)) {
-        setTheme(true);
-    }
+        // Check for saved theme preference or use system preference
+        const savedTheme = localStorage.getItem('theme');
+        const systemDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
-    document.getElementById('darkModeToggle').addEventListener('click', () => {
-        const isDark = document.documentElement.classList.toggle('dark');
-        setTheme(isDark);
-    });
+        if (savedTheme === 'dark' || (!savedTheme && systemDarkMode)) {
+            setTheme(true);
+        }
+
+        document.getElementById('darkModeToggle').addEventListener('click', () => {
+            const isDark = document.documentElement.classList.toggle('dark');
+            setTheme(isDark);
+        });
 
     </script>
 
 </body>
+ 
 </html>

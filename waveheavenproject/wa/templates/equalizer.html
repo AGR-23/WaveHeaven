@@ -1,0 +1,195 @@
+<div class="mb-8">
+    <h2 class="text-xl font-semibold mb-4">Fine Tuning</h2>
+    <div class="space-y-4">
+        <div>
+            <div class="flex justify-between mb-1">
+                <span>32Hz</span>
+                <span id="bass32Value">50</span>
+            </div>
+            <input type="range" id="bass32" min="0" max="100" value="50" class="w-full">
+        </div>
+        <div>
+            <div class="flex justify-between mb-1">
+                <span>64Hz</span>
+                <span id="bass64Value">50</span>
+            </div>
+            <input type="range" id="bass64" min="0" max="100" value="50" class="w-full">
+        </div>
+        <div>
+            <div class="flex justify-between mb-1">
+                <span>125Hz</span>
+                <span id="mid125Value">50</span>
+            </div>
+            <input type="range" id="mid125" min="0" max="100" value="50" class="w-full">
+        </div>
+        <div>
+            <div class="flex justify-between mb-1">
+                <span>250Hz</span>
+                <span id="mid250Value">50</span>
+            </div>
+            <input type="range" id="mid250" min="0" max="100" value="50" class="w-full">
+        </div>
+        <div>
+            <div class="flex justify-between mb-1">
+                <span>500Hz</span>
+                <span id="mid500Value">50</span>
+            </div>
+            <input type="range" id="mid500" min="0" max="100" value="50" class="w-full">
+        </div>
+        <div>
+            <div class="flex justify-between mb-1">
+                <span>1kHz</span>
+                <span id="treble1kValue">50</span>
+            </div>
+            <input type="range" id="treble1k" min="0" max="100" value="50" class="w-full">
+        </div>
+        <div>
+            <div class="flex justify-between mb-1">
+                <span>2kHz</span>
+                <span id="treble2kValue">50</span>
+            </div>
+            <input type="range" id="treble2k" min="0" max="100" value="50" class="w-full">
+        </div>
+        <div>
+            <div class="flex justify-between mb-1">
+                <span>4kHz</span>
+                <span id="treble4kValue">50</span>
+            </div>
+            <input type="range" id="treble4k" min="0" max="100" value="50" class="w-full">
+        </div>
+        <div>
+            <div class="flex justify-between mb-1">
+                <span>8kHz</span>
+                <span id="treble8kValue">50</span>
+            </div>
+            <input type="range" id="treble8k" min="0" max="100" value="50" class="w-full">
+        </div>
+        <div>
+            <div class="flex justify-between mb-1">
+                <span>16kHz</span>
+                <span id="treble16kValue">50</span>
+            </div>
+            <input type="range" id="treble16k" min="0" max="100" value="50" class="w-full">
+        </div>
+    </div>
+</div>
+
+<!-- Botón para guardar los ajustes -->
+<div class="flex justify-between">
+    <button
+        class="px-4 py-2 bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+        onclick="resetEqualizer()">
+        Reset
+    </button>
+    <button class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+        onclick="saveEqualizerSettings()">
+        Save as Profile
+    </button>
+</div>
+
+<!-- Script para manejar los controles deslizantes y enviar los datos al backend -->
+<script>
+    // Actualizar los valores de los controles deslizantes
+    document.getElementById('bass32').addEventListener('input', function () {
+        document.getElementById('bass32Value').textContent = this.value;
+    });
+    document.getElementById('bass64').addEventListener('input', function () {
+        document.getElementById('bass64Value').textContent = this.value;
+    });
+    document.getElementById('mid125').addEventListener('input', function () {
+        document.getElementById('mid125Value').textContent = this.value;
+    });
+    document.getElementById('mid250').addEventListener('input', function () {
+        document.getElementById('mid250Value').textContent = this.value;
+    });
+    document.getElementById('mid500').addEventListener('input', function () {
+        document.getElementById('mid500Value').textContent = this.value;
+    });
+    document.getElementById('treble1k').addEventListener('input', function () {
+        document.getElementById('treble1kValue').textContent = this.value;
+    });
+    document.getElementById('treble2k').addEventListener('input', function () {
+        document.getElementById('treble2kValue').textContent = this.value;
+    });
+    document.getElementById('treble4k').addEventListener('input', function () {
+        document.getElementById('treble4kValue').textContent = this.value;
+    });
+    document.getElementById('treble8k').addEventListener('input', function () {
+        document.getElementById('treble8kValue').textContent = this.value;
+    });
+    document.getElementById('treble16k').addEventListener('input', function () {
+        document.getElementById('treble16kValue').textContent = this.value;
+    });
+
+    // Función para guardar los ajustes del ecualizador
+    function saveEqualizerSettings() {
+        const bass32 = document.getElementById('bass32').value;
+        const bass64 = document.getElementById('bass64').value;
+        const mid125 = document.getElementById('mid125').value;
+        const mid250 = document.getElementById('mid250').value;
+        const mid500 = document.getElementById('mid500').value;
+        const treble1k = document.getElementById('treble1k').value;
+        const treble2k = document.getElementById('treble2k').value;
+        const treble4k = document.getElementById('treble4k').value;
+        const treble8k = document.getElementById('treble8k').value;
+        const treble16k = document.getElementById('treble16k').value;
+        const profileName = prompt("Enter a name for this profile:");
+
+        if (profileName) {
+            fetch('/save_equalizer_settings/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken'),
+                },
+                body: JSON.stringify({
+                    bass32: bass32,
+                    bass64: bass64,
+                    mid125: mid125,
+                    mid250: mid250,
+                    mid500: mid500,
+                    treble1k: treble1k,
+                    treble2k: treble2k,
+                    treble4k: treble4k,
+                    treble8k: treble8k,
+                    treble16k: treble16k,
+                    profile_name: profileName,
+                }),
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        alert('Profile saved successfully!');
+                    } else {
+                        alert('Error saving profile.');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }
+    }
+    // Función para resetear los controles deslizantes
+    function resetEqualizer() {
+        document.getElementById('bass').value = 50;
+        document.getElementById('mid').value = 50;
+        document.getElementById('treble').value = 50;
+        document.getElementById('bassValue').textContent = 50;
+        document.getElementById('midValue').textContent = 50;
+        document.getElementById('trebleValue').textContent = 50;
+    }
+
+    // Función para obtener el token CSRF
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.startsWith(name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>

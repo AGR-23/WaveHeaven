@@ -5,7 +5,7 @@ import json
 class UserPreferences(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)  # Campo user
     name = models.CharField(max_length=151)
-    email = models.EmailField(max_length=254, unique=True)
+    email = models.EmailField(max_length=254)
     audio_settings = models.TextField(blank=True, null=True)
     usage_history = models.TextField(blank=True, null=True)
     ideal_volume = models.FloatField(default=50.0)
@@ -29,7 +29,7 @@ class UserPreferences(models.Model):
 
     def save_audio_profiles(self, profiles):
         self.audio_profiles = profiles
-        self.save()
+        self.save(update_fields=['audio_profiles'])
 
 class SoundProfile(UserPreferences):
     class Meta:
@@ -37,6 +37,10 @@ class SoundProfile(UserPreferences):
 
     def custom_method(self):
         return f"Perfil de sonido para {self.user.username}"
+    
+    def save_audio_profiles(self, profiles):
+        self.audio_profiles = profiles
+        self.save()
 
 class Device(models.Model):
     user = models.ForeignKey(UserPreferences, on_delete=models.CASCADE)  # Relación con UserPreferences

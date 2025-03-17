@@ -3,6 +3,7 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
 from .forms import UserRegisterForm, DeviceForm
 from .models import Device
 from wa.models import UserPreferences, Device
@@ -91,22 +92,51 @@ def user_register(request):
         user_form = UserRegisterForm(request.POST)
         device_form = DeviceForm(request.POST)
         if user_form.is_valid() and device_form.is_valid():
+            # Guardar el usuario
             user = user_form.save(commit=False)
             user.set_password(user_form.cleaned_data["password"])
             user.save()
 
+            # Crear UserPreferences para el usuario con perfiles por defecto
+            user_prefs = UserPreferences.objects.create(
+                user=user,
+                name=user_form.cleaned_data.get("username"),
+                email=user_form.cleaned_data.get("email")
+            )
+
+            # Agregar perfiles por defecto
+            user_prefs.audio_profiles = [
+                {
+                    "name": "Music",
+                    "bass": 80,
+                    "mid": 60,
+                    "treble": 50,
+                    "environment": "Indoor"
+                },
+                {
+                    "name": "Podcast",
+                    "bass": 40,
+                    "mid": 85,
+                    "treble": 60,
+                    "environment": "Outdoor"
+                }
+            ]
+            user_prefs.save()
+
+            # Guardar el dispositivo asociado al UserPreferences
             device = device_form.save(commit=False)
-            device.user = user
+            device.user = user_prefs  # Asignar UserPreferences, no User
             device.save()
 
+            # Iniciar sesión automáticamente después del registro
             login(request, user)
 
-            return redirect("hearing_test") 
+            return redirect("hearing_test")
 
     else:
         user_form = UserRegisterForm()
         device_form = DeviceForm()
-    
+
     return render(request, "register.html", {"user_form": user_form, "device_form": device_form})
 
 def hearing_test(request):
@@ -141,7 +171,49 @@ def user_logout(request):
     logout(request)
     return redirect("login")
 
+@login_required
 def user_dashboard(request):
     user_prefs, _ = UserPreferences.objects.get_or_create(user=request.user)
     profiles = user_prefs.get_audio_profiles()
     return render(request, "dashboard.html", {"profiles": profiles})
+
+# implementar la vista para mostrar el ecualizador FR:O7
+@login_required
+def equalizer_view(request):
+    user_prefs = UserPreferences.objects.get(user=request.user)
+    return render(request, 'equalizer.html', {'profiles': user_prefs.get_audio_profiles()})
+
+# implementar la vista para guardar la configuración del ecualizador FR:O7
+@csrf_exempt
+@login_required
+def save_equalizer_settings(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            profile_name = data.get('profile_name', 'Custom')
+
+            # Obtener las preferencias del usuario
+            user_prefs = UserPreferences.objects.get(user=request.user)
+
+            # Crear un nuevo perfil de sonido con todas las frecuencias
+            new_profile = {
+                'name': profile_name,
+                'bass': data.get('bass', 50),
+                'mid': data.get('mid', 50),
+                'treble': data.get('treble', 50),
+                'environment': 'Custom'
+            }
+
+            # Añadir el nuevo perfil a la lista de perfiles de audio
+            profiles = user_prefs.get_audio_profiles()
+            profiles.append(new_profile)
+
+            # Guardar los perfiles actualizados
+            user_prefs.save_audio_profiles(profiles)
+
+            return JsonResponse({'status': 'success', 'profile': new_profile})
+
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+
+    return JsonResponse({'error': 'Invalid request method'}, status=400)
