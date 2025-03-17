@@ -13,10 +13,15 @@ from wa.views import (
     user_logout,
     hearing_test,
     save_equalizer_settings,
-    equalizer_view
+    equalizer_view,
 )
+
 from profiles import views
-from profiles.views import user_statistics
+
+from profiles.views import (
+    user_profile,
+    user_statistics
+)
 
 urlpatterns = [
     # Panel de administración de Django
@@ -38,7 +43,7 @@ urlpatterns = [
     path("hearing-test/", hearing_test, name="hearing_test"),
       
     # Rutas de función Sound Profile
-    path('profiles/', views.profiles_page, name='profiles_page'),
+    path('sound_profiles/', views.profiles_page, name='profiles_page'),
     path('create_profile/', views.create_profile, name='create_profile'),
     path('edit_profile/<int:profile_index>/', views.edit_profile, name='edit_profile'), 
     path('list_profiles/', views.list_profiles, name='list_profiles'),
@@ -47,5 +52,6 @@ urlpatterns = [
     path('statistics/', user_statistics, name='user_statistics'),
     path('equalizer/', equalizer_view, name='equalizer'),
     path('save_equalizer_settings/', save_equalizer_settings, name='save_equalizer_settings'),
+    path("profile/", user_profile, name="user_profile"),
     
 ]

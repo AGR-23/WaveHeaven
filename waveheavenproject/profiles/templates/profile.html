@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WaveHeaven - User Profile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            DEFAULT: '#3b82f6',
+                            dark: '#60a5fa',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="flex flex-col min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
+    <!-- Header -->
+    <header class="px-4 lg:px-6 h-14 flex items-center border-b">
+        <a href="/" class="flex items-center justify-center">
+            <i data-lucide="audio-waveform" class="h-6 w-6 text-blue-600 dark:text-blue-400"></i>
+            <span class="ml-2 text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-500">
+                WaveHeaven
+            </span>
+        </a>
+        <nav class="ml-auto flex gap-4 sm:gap-6">
+            <a href="{% url 'user_profile' %}" class="text-sm font-medium hover:underline underline-offset-4">Profile</a>
+            <a href="{% url 'equalizer' %}" class="text-sm font-medium hover:underline underline-offset-4">Equalizer</a>
+            <a href="{% url 'hearing_test' %}" class="text-sm font-medium hover:underline underline-offset-4">Hearing Test</a>
+            <a href="{% url 'user_statistics' %}" class="text-sm font-medium hover:underline underline-offset-4">Statistics</a>
+            <button id="darkModeToggle" class="text-sm font-medium hover:underline underline-offset-4">
+                <i data-lucide="sun" class="h-5 w-5 dark:hidden"></i>
+                <i data-lucide="moon" class="h-5 w-5 hidden dark:inline"></i>
+            </button>
+        </nav>
+    </header>
+
+    <!-- User Profile Section -->
+    <main class="flex-1 p-6">
+        <div class="max-w-4xl mx-auto">
+            <!-- User Information -->
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-6 flex justify-between items-center">
+                <div class="flex items-center space-x-4">
+                    <div class="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center">
+                        <i class="text-3xl text-gray-500">👤</i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-semibold">{{ user_prefs.name }}</h2>
+                        <p class="text-gray-500">Age: {{ age }}</p>
+                        <p class="text-gray-500">Member since: {{ member_since }}</p>
+                    </div>
+                </div>
+                <button class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition">
+                    Edit
+                </button>
+            </div>
+
+            <!-- Listening Preferences -->
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-6">
+                <h3 class="text-lg font-bold">Listening Preferences</h3>
+                <p><strong>Preferred Volume Level:</strong> {{ preferred_volume|floatformat:1 }}%</p>
+            </div>
+
+            <!-- Sound Profiles Section -->
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-lg font-bold">Sound Profiles</h3>
+                    <button onclick="openCreateProfileModal()"
+                        class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition flex items-center">
+                        <i data-lucide="plus" class="h-4 w-4 mr-2"></i>
+                        New Profile
+                    </button>
+                </div>
+
+                <div id="profilesContainer" class="mt-4 space-y-4">
+                    {% for profile in user_prefs.audio_profiles %}
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 flex justify-between items-center">
+                        <div>
+                            <h3 class="text-lg font-semibold">{{ profile.name }}</h3>
+                            <p class="text-gray-500 dark:text-gray-400">{{ profile.environment }}</p>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button onclick="openCreateProfileModal('{{ forloop.counter0 }}')" 
+                                class="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+                                <i data-lucide="edit" class="h-4 w-4"></i>
+                            </button>
+                            <button onclick="deleteProfile('{{ forloop.counter0 }}')" 
+                                class="px-3 py-1 text-sm bg-red-100 dark:bg-red-700 text-red-800 dark:text-red-200 rounded-md hover:bg-red-200 dark:hover:bg-red-600 transition">
+                                <i data-lucide="trash-2" class="h-4 w-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-gray-500 dark:text-gray-400 text-center mt-4">No profiles available.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </main>
+
+       <!-- Usage History -->
+<div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-6">
+    <h3 class="text-lg font-bold">Usage History</h3>
+    <p><strong>Total Time:</strong> {{ total_time }} hours</p>
+    <p><strong>Sessions This Week:</strong> {{ sessions_this_week }}</p>
+</div>
+
+<!-- Hearing Health -->
+<div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-6">
+    <h3 class="text-lg font-bold">Hearing Health</h3>
+    <p><strong>Last Test:</strong> {{ hearing_report.date|default:"No test available" }}</p>
+    <p><strong>Status:</strong> {% if hearing_report %}Good{% else %}No Data{% endif %}</p>
+</div>
+
+<!-- Graph -->
+<canvas id="hearingChart"></canvas>
+
+<script>
+    const hearingData = JSON.parse('{{ hearing_data|escapejs }}');
+    const ctx = document.getElementById('hearingChart').getContext('2d');
+
+    if (hearingData.length > 0) {
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: hearingData.frequency.map(freq => freq + " Hz"),
+                datasets: [
+                    { label: 'Left Ear', data: hearingData.left, borderColor: 'blue' },
+                    { label: 'Right Ear', data: hearingData.right, borderColor: 'purple' }
+                ]
+            }
+        });
+    }
+</script>
+
+    <!-- Footer -->
+    <footer class="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t">
+        <p class="text-xs text-gray-500 dark:text-gray-400">© 2025 WaveHeaven. All rights reserved.</p>
+        <nav class="sm:ml-auto flex gap-4 sm:gap-6">
+            <a class="text-xs hover:underline underline-offset-4" href="#">Terms of Service</a>
+            <a class="text-xs hover:underline underline-offset-4" href="#">Privacy Policy</a>
+        </nav>
+    </footer>
+
+    <script>
+        // Dark mode toggle
+        document.getElementById('darkModeToggle').addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+        });
+
+        // Initialize icons
+        lucide.createIcons();
+    </script>
+</body>
+
+</html>

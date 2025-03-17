@@ -1,6 +1,7 @@
 from django.http import JsonResponse, HttpResponseNotAllowed
 from django.views.decorators.csrf import csrf_exempt
 import json
+from datetime import date
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
@@ -91,20 +92,29 @@ def user_register(request):
     if request.method == "POST":
         user_form = UserRegisterForm(request.POST)
         device_form = DeviceForm(request.POST)
+        
         if user_form.is_valid() and device_form.is_valid():
             # Guardar el usuario
             user = user_form.save(commit=False)
             user.set_password(user_form.cleaned_data["password"])
             user.save()
 
+            # Obtener la fecha de nacimiento desde el formulario
+            birthday = user_form.cleaned_data.get("birthday")
+
+            # Calcular la edad
+            today = date.today()
+            age = today.year - birthday.year - ((today.month, today.day) < (birthday.month, birthday.day))
+
             # Crear UserPreferences para el usuario con perfiles por defecto
             user_prefs = UserPreferences.objects.create(
                 user=user,
                 name=user_form.cleaned_data.get("username"),
-                email=user_form.cleaned_data.get("email")
+                email=user_form.cleaned_data.get("email"),
+                birthday=birthday,  # Guardar la fecha de nacimiento
             )
 
-            # Agregar perfiles por defecto
+            # Agregar perfiles de audio por defecto
             user_prefs.audio_profiles = [
                 {
                     "name": "Music",
@@ -125,7 +135,7 @@ def user_register(request):
 
             # Guardar el dispositivo asociado al UserPreferences
             device = device_form.save(commit=False)
-            device.user = user_prefs  # Asignar UserPreferences, no User
+            device.user = user_prefs  # Asignar UserPreferences en lugar de User
             device.save()
 
             # Iniciar sesión automáticamente después del registro

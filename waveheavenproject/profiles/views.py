@@ -1,18 +1,15 @@
-from django.shortcuts import render
+import json
+from datetime import date, timedelta
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-import json
-
-
-# Create your views here.
-from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from wa.models import UserPreferences
 from .models import UserStatistics, ExposureReport
 from .forms import SoundProfileForm
 
 def profiles_page(request):
-    return render(request, 'profiles.html')
+    return render(request, 'sound_profiles.html')
 
 @csrf_exempt
 @login_required
@@ -24,7 +21,7 @@ def apply_profile(request, profile_id):
         return JsonResponse({'status': 'error', 'message': 'Profile not found'}, status=404)
 
     # Guardar el perfil aplicado como el activo
-    user_prefs.audio_settings = json.dumps(profiles[profile_id])  # ✅ Guarda la configuración aplicada
+    user_prefs.audio_settings = json.dumps(profiles[profile_id])
     user_prefs.save(update_fields=['audio_settings'])
 
     return JsonResponse({'status': 'success', 'applied_profile': profiles[profile_id]})
@@ -68,19 +65,14 @@ def create_profile(request):
             user_prefs, _ = UserPreferences.objects.get_or_create(user=request.user)
             profiles = user_prefs.get_audio_profiles()
 
-            print("📌 Recibido en backend:", data)  # ✅ Muestra los datos en consola
-
             if not all(k in data for k in ['name', 'bass', 'mid', 'treble', 'environment']):
                 return JsonResponse({'status': 'error', 'message': 'Missing fields'}, status=400)
 
             profiles.append(data)
             user_prefs.save_audio_profiles(profiles)
 
-            print("✅ Perfiles después de guardar:", user_prefs.get_audio_profiles())  # ✅ Verifica que se guardó
-
             return JsonResponse({'status': 'success', 'profile': data})
         except Exception as e:
-            print("❌ Error en backend:", str(e))  # ✅ Muestra el error en consola
             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
     return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=400)
@@ -140,3 +132,43 @@ def apply_profile_by_name(request, profile_name):
         # Aquí aplicarías los ajustes al audio (ej: guardar en sesión o modelo)
         return JsonResponse({'status': 'success', 'profile': profile})
     return JsonResponse({'error': 'Profile not found'}, status=404)
+
+from django.shortcuts import render, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from .models import UserPreferences
+
+@csrf_exempt
+@login_required
+def user_profile(request):
+    user_prefs = get_object_or_404(UserPreferences, user=request.user)
+
+    # Calculate age
+    if user_prefs.birthday:
+        today = date.today()
+        age = today.year - user_prefs.birthday.year - ((today.month, today.day) < (user_prefs.birthday.month, user_prefs.birthday.day))
+    else:
+        age = "N/A"
+
+    # Retrieve user statistics
+    user_stats = UserStatistics.objects.filter(user=user_prefs).first()
+    total_time = user_stats.total_exposure_time if user_stats else 0
+    sessions_this_week = user_stats.get_sessions_last_week() if user_stats else 0
+
+    # Retrieve hearing test results
+    hearing_report = ExposureReport.objects.filter(user=user_prefs).order_by('-date').first()
+    hearing_data = hearing_report.frequency_data if hearing_report else []
+
+    # Debugging
+    print(f"Total Time: {total_time}, Sessions: {sessions_this_week}, Hearing Data: {hearing_data}")
+
+    context = {
+        "user_prefs": user_prefs,
+        "age": age,
+        "preferred_volume": round(user_prefs.ideal_volume, 1),
+        "total_time": total_time,
+        "sessions_this_week": sessions_this_week,
+        "hearing_report": hearing_report,
+        "hearing_data": hearing_data,
+    }
+    
+    return render(request, "profile.html", context)

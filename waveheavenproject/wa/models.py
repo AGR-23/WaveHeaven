@@ -1,10 +1,12 @@
 from django.db import models
 from django.contrib.auth.models import User
 import json
+from datetime import date
 
 class UserPreferences(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)  # Campo user
     name = models.CharField(max_length=151)
+    birthday = models.DateField(null=True, blank=True)
     email = models.EmailField(max_length=254)
     audio_settings = models.TextField(blank=True, null=True)
     usage_history = models.TextField(blank=True, null=True)
@@ -62,8 +64,9 @@ class AudioAdjustmentRecord(models.Model):
 
 class ExposureReport(models.Model):
     user = models.ForeignKey(UserPreferences, on_delete=models.CASCADE)
-    total_exposure_time = models.IntegerField()  # En segundos o minutos
+    total_exposure_time = models.IntegerField()
     trends = models.TextField(blank=True, null=True)
+    date = models.DateField(default=date.today)
 
     def __str__(self):
         return f"Exposure Report {self.id} - User {self.user.name}"
