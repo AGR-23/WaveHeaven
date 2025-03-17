@@ -4,11 +4,11 @@ WaveHeaven is a web application developed with Django that provides an intellige
 
 # Table of Contents
 
-[Prerequisites]()
+[Prerequisites](https://github.com/AGR-23/WaveHeaven?tab=readme-ov-file#prerequisites)
 
-[Installation]()
+[Installation](https://github.com/AGR-23/WaveHeaven?tab=readme-ov-file#installation)
 
-[Running the Application]()
+[Running the Application](https://github.com/AGR-23/WaveHeaven?tab=readme-ov-file#running-the-application)
 
 ****
 
