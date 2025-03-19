@@ -24,20 +24,24 @@
     </script>
 </head>
 
-<body class="flex flex-col min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
+<body
+    class="flex flex-col min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
     <!-- Header -->
     <header class="px-4 lg:px-6 h-14 flex items-center border-b">
         <a href="/" class="flex items-center justify-center">
             <i data-lucide="audio-waveform" class="h-6 w-6 text-blue-600 dark:text-blue-400"></i>
-            <span class="ml-2 text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-500">
+            <span
+                class="ml-2 text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-500">
                 WaveHeaven
             </span>
         </a>
         <nav class="ml-auto flex gap-4 sm:gap-6">
-            <a href="{% url 'user_profile' %}" class="text-sm font-medium hover:underline underline-offset-4">Profile</a>
-            <a href="{% url 'equalizer' %}" class="text-sm font-medium hover:underline underline-offset-4">Equalizer</a>
-            <a href="{% url 'hearing_test' %}" class="text-sm font-medium hover:underline underline-offset-4">Hearing Test</a>
-            <a href="{% url 'user_statistics' %}" class="text-sm font-medium hover:underline underline-offset-4">Statistics</a>
+            <a href="{% url 'user_profile' %}"
+                class="text-sm font-medium hover:underline underline-offset-4">Profile</a>
+            <a href="{% url 'hearing_test' %}" class="text-sm font-medium hover:underline underline-offset-4">Hearing
+                Test</a>
+            <a href="{% url 'user_statistics' %}"
+                class="text-sm font-medium hover:underline underline-offset-4">Statistics</a>
             <button id="darkModeToggle" class="text-sm font-medium hover:underline underline-offset-4">
                 <i data-lucide="sun" class="h-5 w-5 dark:hidden"></i>
                 <i data-lucide="moon" class="h-5 w-5 hidden dark:inline"></i>
@@ -60,7 +64,8 @@
                         <p class="text-gray-500">Member since: {{ member_since }}</p>
                     </div>
                 </div>
-                <button class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition">
+                <button
+                    class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition">
                     Edit
                 </button>
             </div>
@@ -76,9 +81,6 @@
                 <div class="flex justify-between items-center">
                     <h3 class="text-lg font-bold">Sound Profiles</h3>
                     <button onclick="openCreateProfileModal()"
-                        class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition flex items-center">
-                        <i data-lucide="plus" class="h-4 w-4 mr-2"></i>
-                        New Profile
                     </button>
                 </div>
 
@@ -90,11 +92,11 @@
                             <p class="text-gray-500 dark:text-gray-400">{{ profile.environment }}</p>
                         </div>
                         <div class="flex space-x-2">
-                            <button onclick="openCreateProfileModal('{{ forloop.counter0 }}')" 
+                            <button onclick="openCreateProfileModal('{{ forloop.counter0 }}')"
                                 class="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition">
                                 <i data-lucide="edit" class="h-4 w-4"></i>
                             </button>
-                            <button onclick="deleteProfile('{{ forloop.counter0 }}')" 
+                            <button onclick="deleteProfile('{{ forloop.counter0 }}')"
                                 class="px-3 py-1 text-sm bg-red-100 dark:bg-red-700 text-red-800 dark:text-red-200 rounded-md hover:bg-red-200 dark:hover:bg-red-600 transition">
                                 <i data-lucide="trash-2" class="h-4 w-4"></i>
                             </button>
@@ -108,40 +110,40 @@
         </div>
     </main>
 
-       <!-- Usage History -->
-<div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-6">
-    <h3 class="text-lg font-bold">Usage History</h3>
-    <p><strong>Total Time:</strong> {{ total_time }} hours</p>
-    <p><strong>Sessions This Week:</strong> {{ sessions_this_week }}</p>
-</div>
+    <!-- Usage History -->
+    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-6">
+        <h3 class="text-lg font-bold">Usage History</h3>
+        <p><strong>Total Time:</strong> {{ total_time }} hours</p>
+        <p><strong>Sessions This Week:</strong> {{ sessions_this_week }}</p>
+    </div>
 
-<!-- Hearing Health -->
-<div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-6">
-    <h3 class="text-lg font-bold">Hearing Health</h3>
-    <p><strong>Last Test:</strong> {{ hearing_report.date|default:"No test available" }}</p>
-    <p><strong>Status:</strong> {% if hearing_report %}Good{% else %}No Data{% endif %}</p>
-</div>
+    <!-- Hearing Health -->
+    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-6">
+        <h3 class="text-lg font-bold">Hearing Health</h3>
+        <p><strong>Last Test:</strong> {{ hearing_report.date|default:"No test available" }}</p>
+        <p><strong>Status:</strong> {% if hearing_report %}Good{% else %}No Data{% endif %}</p>
+    </div>
 
-<!-- Graph -->
-<canvas id="hearingChart"></canvas>
+    <!-- Graph -->
+    <canvas id="hearingChart"></canvas>
 
-<script>
-    const hearingData = JSON.parse('{{ hearing_data|escapejs }}');
-    const ctx = document.getElementById('hearingChart').getContext('2d');
+    <script>
+        const hearingData = JSON.parse('{{ hearing_data|escapejs }}');
+        const ctx = document.getElementById('hearingChart').getContext('2d');
 
-    if (hearingData.length > 0) {
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: hearingData.frequency.map(freq => freq + " Hz"),
-                datasets: [
-                    { label: 'Left Ear', data: hearingData.left, borderColor: 'blue' },
-                    { label: 'Right Ear', data: hearingData.right, borderColor: 'purple' }
-                ]
-            }
-        });
-    }
-</script>
+        if (hearingData.length > 0) {
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: hearingData.frequency.map(freq => freq + " Hz"),
+                    datasets: [
+                        { label: 'Left Ear', data: hearingData.left, borderColor: 'blue' },
+                        { label: 'Right Ear', data: hearingData.right, borderColor: 'purple' }
+                    ]
+                }
+            });
+        }
+    </script>
 
     <!-- Footer -->
     <footer class="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t">
@@ -158,8 +160,6 @@
             document.documentElement.classList.toggle('dark');
         });
 
-        // Initialize icons
-        lucide.createIcons();
     </script>
 </body>
 

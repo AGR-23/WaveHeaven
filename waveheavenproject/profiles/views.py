@@ -40,6 +40,20 @@ def list_profiles(request):
     return JsonResponse({"profiles": user_prefs.audio_profiles})
 
 @csrf_exempt
+
+@login_required
+def list_profiles22222(request):
+    user_prefs, created = UserPreferences.objects.get_or_create(user=request.user)
+    if created or not user_prefs.audio_profiles:
+        user_prefs.audio_profiles = [
+            {"name": "Music", "bass": 80, "mid": 60, "treble": 50, "environment": "Inside"},
+            {"name": "Podcast", "bass": 40, "mid": 85, "treble": 65, "environment": "Outside"}
+        ]
+        user_prefs.save(update_fields=['audio_profiles'])
+
+    return JsonResponse({"profiles": user_prefs.audio_profiles})
+
+@csrf_exempt
 @login_required
 def delete_profile(request, profile_index):
     if request.method == 'POST':
@@ -122,15 +136,14 @@ def user_statistics(request):
     
 from django.views.decorators.csrf import csrf_exempt
 
-@csrf_exempt
 @login_required
 def apply_profile_by_name(request, profile_name):
     user_prefs = UserPreferences.objects.get(user=request.user)
-    profile = next((p for p in user_prefs.audio_profiles if p['name'] == profile_name), None)
-    
+    profile = next((p for p in user_prefs.audio_profiles if p['name'].lower() == profile_name.lower()), None)
+
     if profile:
-        # Aquí aplicarías los ajustes al audio (ej: guardar en sesión o modelo)
         return JsonResponse({'status': 'success', 'profile': profile})
+
     return JsonResponse({'error': 'Profile not found'}, status=404)
 
 from django.shortcuts import render, get_object_or_404

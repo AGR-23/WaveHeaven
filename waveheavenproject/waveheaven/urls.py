@@ -50,8 +50,9 @@ urlpatterns = [
     path('delete_profile/<int:profile_index>/', views.delete_profile, name='delete_profile'),
     path('apply_profile/<int:profile_id>/', views.apply_profile, name='apply_profile'),
     path('statistics/', user_statistics, name='user_statistics'),
-    path('equalizer/', equalizer_view, name='equalizer'),
     path('save_equalizer_settings/', save_equalizer_settings, name='save_equalizer_settings'),
     path("profile/", user_profile, name="user_profile"),
+    path('apply_profile_by_name/<str:profile_name>/', views.apply_profile_by_name, name='apply_profile_by_name'),
+
     
 ]

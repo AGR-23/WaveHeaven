@@ -87,7 +87,19 @@ def set_sound_category(request):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
+@login_required
+def list_profiles22222(request):
+    user_prefs, created = UserPreferences.objects.get_or_create(user=request.user)
+    if created or not user_prefs.audio_profiles:
+        user_prefs.audio_profiles = [
+            {"name": "Music", "bass": 80, "mid": 60, "treble": 50, "environment": "Inside"},
+            {"name": "Podcast", "bass": 40, "mid": 85, "treble": 65, "environment": "Outside"}
+        ]
+        user_prefs.save(update_fields=['audio_profiles'])
 
+    return JsonResponse({"profiles": user_prefs.audio_profiles})
+
+@csrf_exempt
 def user_register(request):
     if request.method == "POST":
         user_form = UserRegisterForm(request.POST)
