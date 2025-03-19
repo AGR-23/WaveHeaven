@@ -80,8 +80,7 @@
             <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
                 <div class="flex justify-between items-center">
                     <h3 class="text-lg font-bold">Sound Profiles</h3>
-                    <button onclick="openCreateProfileModal()"
-                    </button>
+                    <button onclick="openCreateProfileModal()"</button>
                 </div>
 
                 <div id="profilesContainer" class="mt-4 space-y-4">
@@ -118,11 +117,63 @@
     </div>
 
     <!-- Hearing Health -->
-    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-6">
-        <h3 class="text-lg font-bold">Hearing Health</h3>
-        <p><strong>Last Test:</strong> {{ hearing_report.date|default:"No test available" }}</p>
-        <p><strong>Status:</strong> {% if hearing_report %}Good{% else %}No Data{% endif %}</p>
-    </div>
+    <!-- Hearing Health -->
+<div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-6">
+    <h3 class="text-lg font-bold">Hearing Health</h3>
+    <p><strong>Last Test:</strong> {{ hearing_report.date|default:"No test available" }}</p>
+    <p><strong>Status:</strong> {% if hearing_report %}Good{% else %}No Data{% endif %}</p>
+</div>
+
+<!-- Volume Over Time Chart -->
+<div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-6">
+    <h3 class="text-lg font-bold">Volume Over Time</h3>
+    <canvas id="volumeChart"></canvas>
+</div>
+
+<!-- Risk Notifications -->
+<div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-6">
+    <h3 class="text-lg font-bold">Risk Notifications</h3>
+    <ul class="list-disc list-inside text-gray-600 dark:text-gray-400">
+        {% for notification in risk_notifications %}
+            <li>{{ notification.warning_type }} on {{ notification.date_and_time }}</li>
+        {% empty %}
+            <li>No risk notifications available.</li>
+        {% endfor %}
+    </ul>
+</div>
+
+<!-- Graph Script -->
+<script>
+    const volumeData = {
+        labels: JSON.parse('{{ volume_labels|escapejs }}'),
+        datasets: [{
+            label: 'Recommended Volume (%)',
+            data: JSON.parse('{{ volume_data|escapejs }}'),
+            borderColor: 'rgba(59, 130, 246, 1)',
+            backgroundColor: 'rgba(59, 130, 246, 0.2)',
+            fill: true,
+            tension: 0.4
+        }]
+    };
+
+    const volumeConfig = {
+        type: 'line',
+        data: volumeData,
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            }
+        }
+    };
+
+    const volumeChart = new Chart(
+        document.getElementById('volumeChart'),
+        volumeConfig
+    );
+</script>
 
     <!-- Graph -->
     <canvas id="hearingChart"></canvas>

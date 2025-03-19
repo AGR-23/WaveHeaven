@@ -7,6 +7,16 @@ from django.contrib.auth.decorators import login_required
 from wa.models import UserPreferences
 from .models import UserStatistics, ExposureReport
 from .forms import SoundProfileForm
+from django.shortcuts import render, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from wa.models import UserPreferences, ExposureReport, AudioAdjustmentRecord, HearingRiskNotification
+from datetime import timedelta
+from django.shortcuts import render, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.core.serializers.json import DjangoJSONEncoder
+import json
+from wa.models import UserPreferences, ExposureReport, AudioAdjustmentRecord, HearingRiskNotification
+from profiles.models import UserStatistics
 
 def profiles_page(request):
     return render(request, 'sound_profiles.html')
@@ -122,25 +132,45 @@ def edit_profile(request, profile_index):
 @csrf_exempt
 @login_required
 def user_statistics(request):
+    # Obtener las preferencias del usuario
     user_prefs = get_object_or_404(UserPreferences, user=request.user)
-    user_stats = UserStatistics.objects.filter(user=user_prefs).first()
 
-    if user_stats:
-        total_exposure_time = user_stats.get_total_exposure_time()
-        average_daily_exposure = user_stats.get_average_daily_exposure_last_week()
-        trends = f"Average daily exposure last week: {average_daily_exposure:.1f} minutes"
-        recommendations = user_stats.get_recommendations()
+    # Calcular el tiempo total de exposición
+    exposure_reports = ExposureReport.objects.filter(user=user_prefs)
+    total_exposure_time = sum(report.total_exposure_time for report in exposure_reports)
+
+    # Calcular el tiempo promedio diario de exposición
+    if exposure_reports:
+        average_daily_exposure = total_exposure_time / 7  # Promedio diario en la última semana
     else:
-        total_exposure_time = 0
-        trends = "No recent exposure data available."
-        recommendations = "No recommendations available."
+        average_daily_exposure = 0
+
+    # Obtener el número de notificaciones de riesgo
+    risk_notifications = HearingRiskNotification.objects.filter(user=user_prefs).count()
+
+    # Obtener datos para el gráfico de volumen
+    audio_adjustments = AudioAdjustmentRecord.objects.filter(user=user_prefs).order_by('timestamp')
+    volume_data = [adjustment.recommended_volume for adjustment in audio_adjustments]
+    volume_labels = [adjustment.timestamp.strftime('%H:%M') for adjustment in audio_adjustments]
+
+    # Convertir los datos a JSON
+    volume_data_json = json.dumps(volume_data, cls=DjangoJSONEncoder)
+    volume_labels_json = json.dumps(volume_labels, cls=DjangoJSONEncoder)
+
+    # Consejos de salud auditiva
+    health_tips = []
+    if risk_notifications > 0:
+        health_tips.append("You have had high volume peaks. Consider reducing the volume in noisy environments.")
+    if total_exposure_time > 120:  # Más de 2 horas
+        health_tips.append("Remember to take 5-minute breaks every hour when listening to audio for extended periods.")
 
     return render(request, 'statistics.html', {
-        'stats': {
-            'total_exposure_time': total_exposure_time,
-            'trends': trends,
-        },
-        'recommendations': recommendations,
+        'total_exposure_time': total_exposure_time,
+        'average_daily_exposure': round(average_daily_exposure, 1),
+        'risk_notifications': risk_notifications,
+        'volume_data_json': volume_data_json,
+        'volume_labels_json': volume_labels_json,
+        'health_tips': health_tips,
     })
     
 from django.views.decorators.csrf import csrf_exempt
@@ -162,35 +192,39 @@ from .models import UserPreferences
 @csrf_exempt
 @login_required
 def user_profile(request):
+    # Obtener las preferencias del usuario
     user_prefs = get_object_or_404(UserPreferences, user=request.user)
 
-    # Calculate age
+    # Calcular la edad
     if user_prefs.birthday:
         today = date.today()
         age = today.year - user_prefs.birthday.year - ((today.month, today.day) < (user_prefs.birthday.month, user_prefs.birthday.day))
     else:
         age = "N/A"
 
-    # Retrieve user statistics
+    # Obtener las estadísticas del usuario usando el modelo proxy UserStatistics
     user_stats = UserStatistics.objects.filter(user=user_prefs).first()
-    total_time = user_stats.total_exposure_time if user_stats else 0
+    total_time = user_stats.get_total_exposure_time() if user_stats else 0
     sessions_this_week = user_stats.get_sessions_last_week() if user_stats else 0
 
-    # Retrieve hearing test results
-    hearing_report = ExposureReport.objects.filter(user=user_prefs).order_by('-date').first()
-    hearing_data = hearing_report.frequency_data if hearing_report else []
+    # Obtener los ajustes de volumen recientes
+    audio_adjustments = AudioAdjustmentRecord.objects.filter(user=user_prefs).order_by('-timestamp')[:10]  # Últimos 10 ajustes
+    volume_data = [adjustment.recommended_volume for adjustment in audio_adjustments]
+    volume_labels = [adjustment.timestamp.strftime('%H:%M') for adjustment in audio_adjustments]
 
-    # Debugging
-    print(f"Total Time: {total_time}, Sessions: {sessions_this_week}, Hearing Data: {hearing_data}")
+    # Obtener las notificaciones de riesgo
+    risk_notifications = HearingRiskNotification.objects.filter(user=user_prefs).order_by('-date_and_time')[:5]  # Últimas 5 notificaciones
 
+    # Pasar los datos a la plantilla
     context = {
         "user_prefs": user_prefs,
         "age": age,
         "preferred_volume": round(user_prefs.ideal_volume, 1),
         "total_time": total_time,
         "sessions_this_week": sessions_this_week,
-        "hearing_report": hearing_report,
-        "hearing_data": hearing_data,
+        "volume_data": json.dumps(volume_data, cls=DjangoJSONEncoder),  # Datos de volumen para el gráfico
+        "volume_labels": json.dumps(volume_labels, cls=DjangoJSONEncoder),  # Etiquetas de tiempo para el gráfico
+        "risk_notifications": risk_notifications,  # Notificaciones de riesgo
     }
     
     return render(request, "profile.html", context)

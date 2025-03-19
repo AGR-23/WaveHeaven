@@ -7,6 +7,7 @@
     <title>WaveHeaven - User Statistics</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Chart.js -->
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -48,22 +49,42 @@
     <!-- Main Content -->
     <main class="flex-1 p-6">
         <div class="max-w-4xl mx-auto">
-            <h1 class="text-3xl font-bold mb-6">Listening Statistics</h1>
-    
-            {% if message %}
-                <p class="text-gray-500 dark:text-gray-400">{{ message }}</p>
-            {% else %}
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-                    <h2 class="text-xl font-semibold">Recent Exposure Report</h2>
-                    <p class="text-gray-600 dark:text-gray-400">Total Exposure Time: <strong>{{ stats.total_exposure_time }} minutes</strong></p>
-                    <p class="text-gray-600 dark:text-gray-400">Trends: <strong>{{ stats.trends }}</strong></p>
+            <h1 class="text-3xl font-bold mb-6">Statistics</h1>
+
+            <!-- Exposure Summary -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
+                <h2 class="text-xl font-semibold mb-4">Exposure Summary</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <p class="text-gray-600 dark:text-gray-400">Total Exposure Time</p>
+                        <p class="text-2xl font-bold">{{ total_exposure_time }} minutes</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-600 dark:text-gray-400">Average Daily Exposure</p>
+                        <p class="text-2xl font-bold">{{ average_daily_exposure }} minutes</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-600 dark:text-gray-400">Risk Notifications</p>
+                        <p class="text-2xl font-bold">{{ risk_notifications }}</p>
+                    </div>
                 </div>
-    
-                <div class="mt-6 bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-                    <h2 class="text-xl font-semibold">Recommendations</h2>
-                    <p class="text-gray-600 dark:text-gray-400">{{ recommendations }}</p>
-                </div>
-            {% endif %}
+            </div>
+
+            <!-- Volume Over Time Chart -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
+                <h2 class="text-xl font-semibold mb-4">Volume Over Time</h2>
+                <canvas id="volumeChart"></canvas>
+            </div>
+
+            <!-- Hearing Health Tips -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-semibold mb-4">Hearing Health Tips</h2>
+                <ul class="list-disc list-inside text-gray-600 dark:text-gray-400">
+                    {% for tip in health_tips %}
+                        <li>{{ tip }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
         </div>
     </main>
 
@@ -76,6 +97,10 @@
         </nav>
     </footer>
 
+    <!-- Pasar datos de Django a JavaScript -->
+    {{ volume_data_json|json_script:"volumeData" }}
+    {{ volume_labels_json|json_script:"volumeLabels" }}
+
     <script>
         // Initialize Lucide icons
         lucide.createIcons();
@@ -84,6 +109,39 @@
         document.getElementById('darkModeToggle').addEventListener('click', () => {
             document.documentElement.classList.toggle('dark');
         });
+
+        // Obtener los datos desde el script generado por Django
+        const volumeData = {
+            labels: JSON.parse(document.getElementById('volumeLabels').textContent),
+            datasets: [{
+                label: 'Volume (%)',
+                data: JSON.parse(document.getElementById('volumeData').textContent),
+                borderColor: 'rgba(59, 130, 246, 1)',
+                backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                fill: true,
+                tension: 0.4
+            }]
+        };
+
+        // Configuración del gráfico
+        const volumeConfig = {
+            type: 'line',
+            data: volumeData,
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100
+                    }
+                }
+            }
+        };
+
+        // Renderizar el gráfico
+        const volumeChart = new Chart(
+            document.getElementById('volumeChart'),
+            volumeConfig
+        );
     </script>
 </body>
 </html>
