@@ -164,14 +164,24 @@ def user_register(request):
 
 def hearing_test(request):
     if request.method == "POST":
-        low_volume = request.POST.get("low_volume", 50)
-        mid_volume = request.POST.get("mid_volume", 50)
-        high_volume = request.POST.get("high_volume", 50)
+        # Obtener los valores del formulario
+        low_volume = float(request.POST.get("low_volume", 50))
+        mid_volume = float(request.POST.get("mid_volume", 50))
+        high_volume = float(request.POST.get("high_volume", 50))
 
         if request.user.is_authenticated:
+            # Obtener o crear las preferencias del usuario
             user_prefs, created = UserPreferences.objects.get_or_create(user=request.user)
-            # Guardamos el volumen promedio de las pruebas como el ideal
-            user_prefs.ideal_volume = (int(low_volume) + int(mid_volume) + int(high_volume)) / 3
+            
+            # Actualizar los umbrales de frecuencia
+            user_prefs.low_freq_threshold = low_volume
+            user_prefs.mid_freq_threshold = mid_volume
+            user_prefs.high_freq_threshold = high_volume
+
+            # Guardar el volumen promedio como el ideal
+            user_prefs.ideal_volume = (low_volume + mid_volume + high_volume) / 3
+
+            # Guardar los cambios en la base de datos
             user_prefs.save()
 
             return redirect("dashboard")  # Redirigir al dashboard

@@ -24,24 +24,19 @@
     </script>
 </head>
 
-<body
-    class="flex flex-col min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
+<body class="flex flex-col min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
     <!-- Header -->
     <header class="px-4 lg:px-6 h-14 flex items-center border-b">
         <a href="/" class="flex items-center justify-center">
             <i data-lucide="audio-waveform" class="h-6 w-6 text-blue-600 dark:text-blue-400"></i>
-            <span
-                class="ml-2 text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-500">
+            <span class="ml-2 text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-500">
                 WaveHeaven
             </span>
         </a>
         <nav class="ml-auto flex gap-4 sm:gap-6">
-            <a href="{% url 'user_profile' %}"
-                class="text-sm font-medium hover:underline underline-offset-4">Profile</a>
-            <a href="{% url 'hearing_test' %}" class="text-sm font-medium hover:underline underline-offset-4">Hearing
-                Test</a>
-            <a href="{% url 'user_statistics' %}"
-                class="text-sm font-medium hover:underline underline-offset-4">Statistics</a>
+            <a href="{% url 'user_profile' %}" class="text-sm font-medium hover:underline underline-offset-4">Profile</a>
+            <a href="{% url 'hearing_test' %}" class="text-sm font-medium hover:underline underline-offset-4">Hearing Test</a>
+            <a href="{% url 'user_statistics' %}" class="text-sm font-medium hover:underline underline-offset-4">Statistics</a>
             <button id="darkModeToggle" class="text-sm font-medium hover:underline underline-offset-4">
                 <i data-lucide="sun" class="h-5 w-5 dark:hidden"></i>
                 <i data-lucide="moon" class="h-5 w-5 hidden dark:inline"></i>
@@ -64,8 +59,7 @@
                         <p class="text-gray-500">Member since: {{ member_since }}</p>
                     </div>
                 </div>
-                <button
-                    class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition">
+                <button class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition">
                     Edit
                 </button>
             </div>
@@ -106,95 +100,100 @@
                     {% endfor %}
                 </div>
             </div>
+
+            <!-- Usage History -->
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-6">
+                <h3 class="text-lg font-bold">Usage History</h3>
+                <p><strong>Total Time:</strong> {{ total_time }} hours</p>
+                <p><strong>Sessions This Week:</strong> {{ sessions_this_week }}</p>
+            </div>
+
+            <!-- Hearing Health -->
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-6">
+                <h3 class="text-lg font-bold">Hearing Health</h3>
+                <p><strong>Last Test:</strong> 
+                    {% if user_prefs.low_freq_threshold != 50.0 or user_prefs.mid_freq_threshold != 50.0 or user_prefs.high_freq_threshold != 50.0 %}
+                        Realizado
+                    {% else %}
+                        No test available
+                    {% endif %}
+                </p>
+                <p><strong>Status:</strong> {{ last_test_status }}</p>
+            </div>
+
+            <!-- Volume Over Time Chart -->
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-6">
+                <h3 class="text-lg font-bold">Volume Over Time</h3>
+                <canvas id="volumeChart"></canvas>
+            </div>
+
+            <!-- Risk Notifications -->
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-6">
+                <h3 class="text-lg font-bold">Risk Notifications</h3>
+                <ul class="list-disc list-inside text-gray-600 dark:text-gray-400">
+                    {% for notification in risk_notifications %}
+                        <li>{{ notification.warning_type }} on {{ notification.date_and_time }}</li>
+                    {% empty %}
+                        <li>No risk notifications available.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <!-- Graph Script -->
+            <script>
+                const volumeData = {
+                    labels: JSON.parse('{{ volume_labels|escapejs }}'),
+                    datasets: [{
+                        label: 'Recommended Volume (%)',
+                        data: JSON.parse('{{ volume_data|escapejs }}'),
+                        borderColor: 'rgba(59, 130, 246, 1)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                };
+
+                const volumeConfig = {
+                    type: 'line',
+                    data: volumeData,
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100
+                            }
+                        }
+                    }
+                };
+
+                const volumeChart = new Chart(
+                    document.getElementById('volumeChart'),
+                    volumeConfig
+                );
+            </script>
+
+            <!-- Graph -->
+            <canvas id="hearingChart"></canvas>
+
+            <script>
+                const hearingData = JSON.parse('{{ hearing_data|escapejs }}');
+                const ctx = document.getElementById('hearingChart').getContext('2d');
+
+                if (hearingData.length > 0) {
+                    new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: hearingData.frequency.map(freq => freq + " Hz"),
+                            datasets: [
+                                { label: 'Left Ear', data: hearingData.left, borderColor: 'blue' },
+                                { label: 'Right Ear', data: hearingData.right, borderColor: 'purple' }
+                            ]
+                        }
+                    });
+                }
+            </script>
         </div>
     </main>
-
-    <!-- Usage History -->
-    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-6">
-        <h3 class="text-lg font-bold">Usage History</h3>
-        <p><strong>Total Time:</strong> {{ total_time }} hours</p>
-        <p><strong>Sessions This Week:</strong> {{ sessions_this_week }}</p>
-    </div>
-
-    <!-- Hearing Health -->
-    <!-- Hearing Health -->
-<div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-6">
-    <h3 class="text-lg font-bold">Hearing Health</h3>
-    <p><strong>Last Test:</strong> {{ hearing_report.date|default:"No test available" }}</p>
-    <p><strong>Status:</strong> {% if hearing_report %}Good{% else %}No Data{% endif %}</p>
-</div>
-
-<!-- Volume Over Time Chart -->
-<div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-6">
-    <h3 class="text-lg font-bold">Volume Over Time</h3>
-    <canvas id="volumeChart"></canvas>
-</div>
-
-<!-- Risk Notifications -->
-<div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-6">
-    <h3 class="text-lg font-bold">Risk Notifications</h3>
-    <ul class="list-disc list-inside text-gray-600 dark:text-gray-400">
-        {% for notification in risk_notifications %}
-            <li>{{ notification.warning_type }} on {{ notification.date_and_time }}</li>
-        {% empty %}
-            <li>No risk notifications available.</li>
-        {% endfor %}
-    </ul>
-</div>
-
-<!-- Graph Script -->
-<script>
-    const volumeData = {
-        labels: JSON.parse('{{ volume_labels|escapejs }}'),
-        datasets: [{
-            label: 'Recommended Volume (%)',
-            data: JSON.parse('{{ volume_data|escapejs }}'),
-            borderColor: 'rgba(59, 130, 246, 1)',
-            backgroundColor: 'rgba(59, 130, 246, 0.2)',
-            fill: true,
-            tension: 0.4
-        }]
-    };
-
-    const volumeConfig = {
-        type: 'line',
-        data: volumeData,
-        options: {
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 100
-                }
-            }
-        }
-    };
-
-    const volumeChart = new Chart(
-        document.getElementById('volumeChart'),
-        volumeConfig
-    );
-</script>
-
-    <!-- Graph -->
-    <canvas id="hearingChart"></canvas>
-
-    <script>
-        const hearingData = JSON.parse('{{ hearing_data|escapejs }}');
-        const ctx = document.getElementById('hearingChart').getContext('2d');
-
-        if (hearingData.length > 0) {
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: hearingData.frequency.map(freq => freq + " Hz"),
-                    datasets: [
-                        { label: 'Left Ear', data: hearingData.left, borderColor: 'blue' },
-                        { label: 'Right Ear', data: hearingData.right, borderColor: 'purple' }
-                    ]
-                }
-            });
-        }
-    </script>
 
     <!-- Footer -->
     <footer class="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t">
@@ -210,7 +209,6 @@
         document.getElementById('darkModeToggle').addEventListener('click', () => {
             document.documentElement.classList.toggle('dark');
         });
-
     </script>
 </body>
 

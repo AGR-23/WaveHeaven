@@ -189,6 +189,14 @@ from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from .models import UserPreferences
 
+from django.shortcuts import render, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_exempt
+from django.core.serializers.json import DjangoJSONEncoder
+from datetime import date
+import json
+from wa.models import UserPreferences, AudioAdjustmentRecord, HearingRiskNotification
+
 @csrf_exempt
 @login_required
 def user_profile(request):
@@ -215,6 +223,11 @@ def user_profile(request):
     # Obtener las notificaciones de riesgo
     risk_notifications = HearingRiskNotification.objects.filter(user=user_prefs).order_by('-date_and_time')[:5]  # Últimas 5 notificaciones
 
+    # Lógica para determinar el estado del último test de audición
+    last_test_status = "No Data"
+    if user_prefs.low_freq_threshold != 50.0 or user_prefs.mid_freq_threshold != 50.0 or user_prefs.high_freq_threshold != 50.0:
+        last_test_status = "Good"  # O cualquier otra lógica que desees
+
     # Pasar los datos a la plantilla
     context = {
         "user_prefs": user_prefs,
@@ -225,6 +238,10 @@ def user_profile(request):
         "volume_data": json.dumps(volume_data, cls=DjangoJSONEncoder),  # Datos de volumen para el gráfico
         "volume_labels": json.dumps(volume_labels, cls=DjangoJSONEncoder),  # Etiquetas de tiempo para el gráfico
         "risk_notifications": risk_notifications,  # Notificaciones de riesgo
+        "last_test_status": last_test_status,  # Estado del último test de audición
+        "low_freq_threshold": user_prefs.low_freq_threshold,  # Umbral de frecuencia baja
+        "mid_freq_threshold": user_prefs.mid_freq_threshold,  # Umbral de frecuencia media
+        "high_freq_threshold": user_prefs.high_freq_threshold,  # Umbral de frecuencia alta
     }
     
     return render(request, "profile.html", context)
