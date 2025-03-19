@@ -64,12 +64,11 @@ class AudioAdjustmentRecord(models.Model):
 
 class ExposureReport(models.Model):
     user = models.ForeignKey(UserPreferences, on_delete=models.CASCADE)
-    total_exposure_time = models.IntegerField()
-    trends = models.TextField(blank=True, null=True)
-    date = models.DateField(default=date.today)
+    total_exposure_time = models.IntegerField()  # Tiempo de exposición en minutos
+    date = models.DateField(auto_now_add=True)   # Fecha de creación del informe
 
     def __str__(self):
-        return f"Exposure Report {self.id} - User {self.user.name}"
+        return f"Exposure Report for {self.user.user.username} on {self.date}"
 
 class HearingRiskNotification(models.Model):
     user = models.ForeignKey(UserPreferences, on_delete=models.CASCADE)

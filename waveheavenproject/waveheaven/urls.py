@@ -1,6 +1,5 @@
 from django.contrib import admin
-from django.urls import include
-from django.urls import path
+from django.urls import include, path
 from django.contrib.auth import views as auth_views
 from wa.views import (
     home, 
@@ -14,6 +13,7 @@ from wa.views import (
     hearing_test,
     save_equalizer_settings,
     equalizer_view,
+    save_exposure_time,
 )
 
 from profiles import views
@@ -53,6 +53,5 @@ urlpatterns = [
     path('save_equalizer_settings/', save_equalizer_settings, name='save_equalizer_settings'),
     path("profile/", user_profile, name="user_profile"),
     path('apply_profile_by_name/<str:profile_name>/', views.apply_profile_by_name, name='apply_profile_by_name'),
-
-    
+    path('save_exposure_time/', save_exposure_time, name='save_exposure_time'),
 ]

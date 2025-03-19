@@ -1,5 +1,7 @@
 from django.db import models
 from wa.models import ExposureReport, UserPreferences  # Import models from wa
+from django.utils.timezone import now
+from datetime import timedelta
 
 class SoundProfile(UserPreferences):
     class Meta:
@@ -32,3 +34,26 @@ class UserStatistics(ExposureReport):
         """
         last_week = now().date() - timedelta(days=7)
         return ExposureReport.objects.filter(user=self.user, date__gte=last_week).count()
+
+    def get_total_exposure_time(self):
+        """
+        Calculate the total exposure time in minutes based on all ExposureReport records.
+        """
+        total_time = ExposureReport.objects.filter(user=self.user).aggregate(
+            total_time=models.Sum('total_exposure_time')
+        )['total_time']
+        return total_time if total_time else 0  # Return 0 if no records exist
+
+    def get_average_daily_exposure_last_week(self):
+        """
+        Calculate the average daily exposure time in the last 7 days.
+        """
+        last_week = now().date() - timedelta(days=7)
+        reports_last_week = ExposureReport.objects.filter(user=self.user, date__gte=last_week)
+        total_time_last_week = reports_last_week.aggregate(
+            total_time=models.Sum('total_exposure_time')
+        )['total_time']
+
+        if total_time_last_week:
+            return total_time_last_week / 7  # Promedio diario
+        return 0

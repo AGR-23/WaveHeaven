@@ -122,16 +122,25 @@ def edit_profile(request, profile_index):
 @csrf_exempt
 @login_required
 def user_statistics(request):
-    # Ensure we get the UserPreferences instance
     user_prefs = get_object_or_404(UserPreferences, user=request.user)
+    user_stats = UserStatistics.objects.filter(user=user_prefs).first()
 
-    # Retrieve the user's exposure report (if it exists)
-    exposure_report = ExposureReport.objects.filter(user=user_prefs).first()
+    if user_stats:
+        total_exposure_time = user_stats.get_total_exposure_time()
+        average_daily_exposure = user_stats.get_average_daily_exposure_last_week()
+        trends = f"Average daily exposure last week: {average_daily_exposure:.1f} minutes"
+        recommendations = user_stats.get_recommendations()
+    else:
+        total_exposure_time = 0
+        trends = "No recent exposure data available."
+        recommendations = "No recommendations available."
 
-    # Pass data to the template
     return render(request, 'statistics.html', {
-        'user_prefs': user_prefs,
-        'exposure_report': exposure_report,
+        'stats': {
+            'total_exposure_time': total_exposure_time,
+            'trends': trends,
+        },
+        'recommendations': recommendations,
     })
     
 from django.views.decorators.csrf import csrf_exempt

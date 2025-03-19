@@ -7,7 +7,8 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from .forms import UserRegisterForm, DeviceForm
 from .models import Device
-from wa.models import UserPreferences, Device
+from wa.models import UserPreferences, Device, ExposureReport
+
 from django.contrib.auth.models import User  # Importar modelo de usuario
 
 def home(request):
@@ -239,3 +240,31 @@ def save_equalizer_settings(request):
             return JsonResponse({'error': str(e)}, status=500)
 
     return JsonResponse({'error': 'Invalid request method'}, status=400)
+
+@csrf_exempt
+@login_required
+def save_exposure_time(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            exposure_time = data.get('exposure_time', 0)
+
+            # Asegúrate de que exposure_time sea un entero
+            try:
+                exposure_time = int(exposure_time)
+            except (ValueError, TypeError):
+                return JsonResponse({'status': 'error', 'message': 'Invalid exposure_time'}, status=400)
+
+            # Obtener las preferencias del usuario actual
+            user_prefs = UserPreferences.objects.get(user=request.user)
+
+            # Crear un nuevo informe de exposición
+            exposure_report = ExposureReport.objects.create(
+                user=user_prefs,
+                total_exposure_time=exposure_time,
+            )
+
+            return JsonResponse({'status': 'success'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    return JsonResponse({'status': 'error'}, status=400)

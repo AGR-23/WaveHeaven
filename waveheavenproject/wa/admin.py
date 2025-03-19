@@ -20,9 +20,9 @@ class AudioAdjustmentRecordAdmin(admin.ModelAdmin):
     list_filter = ('timestamp',)
 
 class ExposureReportAdmin(admin.ModelAdmin):
-    list_display = ('user', 'total_exposure_time', 'trends')
-    search_fields = ('user__username',)
-    list_filter = ('total_exposure_time',)
+    list_display = ('user', 'total_exposure_time', 'date')  # Campos válidos del modelo
+    search_fields = ('user__user__username',)  # Buscar por nombre de usuario
+    list_filter = ('date',)  # Filtrar por fecha
 
 class HearingRiskNotificationAdmin(admin.ModelAdmin):
     list_display = ('user', 'warning_type', 'date_and_time', 'exposure_threshold')
