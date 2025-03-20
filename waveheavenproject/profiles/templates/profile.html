@@ -138,7 +138,7 @@
                     {% for notification in risk_notifications %}
                         <li>{{ notification.warning_type }} on {{ notification.date_and_time }}</li>
                     {% empty %}
-                        <li>No risk notifications available.</li>
+                        <li>Some risk notifications could happend.</li>
                     {% endfor %}
                 </ul>
             </div>

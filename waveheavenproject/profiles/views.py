@@ -137,7 +137,8 @@ def user_statistics(request):
         average_daily_exposure = 0
 
     # Obtener el número de notificaciones de riesgo
-    risk_notifications = HearingRiskNotification.objects.filter(user=user_prefs).count()
+    # risk_notifications = HearingRiskNotification.objects.filter(user=user_prefs).count()
+    risk_notifications = 1
 
     # Obtener datos para el gráfico de volumen
     audio_adjustments = AudioAdjustmentRecord.objects.filter(user=user_prefs).order_by('timestamp')
@@ -148,12 +149,37 @@ def user_statistics(request):
     volume_data_json = json.dumps(volume_data, cls=DjangoJSONEncoder)
     volume_labels_json = json.dumps(volume_labels, cls=DjangoJSONEncoder)
 
-    # Consejos de salud auditiva
-    health_tips = []
+    # Consejos de salud auditiva RF:17.2
+    health_tips = [
+        "Keep your volume below 85 dB to prevent hearing damage.",
+        "Use noise-canceling headphones instead of increasing volume in noisy environments.",
+        "Take breaks every 60 minutes to give your ears a rest.",
+        "Follow the 60/60 rule: Listen at 60% volume for no more than 60 minutes at a time.",
+        "Reduce exposure to loud environments, such as concerts and clubs.",
+        "Keep earphones clean to avoid infections and maintain sound quality.",
+        "Try over-ear headphones instead of in-ear models for better protection.",
+        "Get a hearing test regularly, especially if you experience ringing in your ears.",
+        "Lower the volume when using earbuds for extended periods.",
+        "Enable volume-limiting features on your phone or music devices.",
+        "Protect your ears from cold wind and extreme weather conditions.",
+        "Stay hydrated—proper hydration helps maintain inner ear function.",
+        "Be aware of early signs of hearing loss, such as difficulty understanding speech in noisy environments.",
+    ] #some advises previously given (by default i mean)
     if risk_notifications > 0:
         health_tips.append("You have had high volume peaks. Consider reducing the volume in noisy environments.")
-    if total_exposure_time > 120:  # Más de 2 horas
+    if total_exposure_time > 12:  # Más de 2 horas modificado
         health_tips.append("Remember to take 5-minute breaks every hour when listening to audio for extended periods.")
+    elif total_exposure_time > 10:  # More than 1 hour modificado
+        health_tips.append("Try lowering your volume slightly for a safer experience.")
+    if user_prefs:
+            if user_prefs.sound_category == "music":
+                health_tips.append("You enjoy music! Using an equalizer can help customize your sound experience while keeping safe listening levels.")
+            elif user_prefs.sound_category == "podcast":
+                health_tips.append("You frequently listen to podcasts. Lowering bass levels might help enhance speech clarity.")
+            elif user_prefs.sound_category == "call":
+                health_tips.append("Since you often make calls, consider using noise-canceling headphones for a better experience.")
+            elif user_prefs.ideal_volume > 80:  #risk starts at 80%
+                health_tips.append("Your preferred volume is quite high. Consider reducing it to prevent long-term hearing issues.")
 
     return render(request, 'statistics.html', {
         'total_exposure_time': total_exposure_time,

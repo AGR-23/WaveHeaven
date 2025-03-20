@@ -764,6 +764,35 @@
             } else {
                 showNotification("High Noise Exposure Warning: You've been listening to loud sounds for too long!", "warning");
             }
+            
+            sendRiskNotification();
+        }
+
+        async function sendRiskNotification() { //just trying to save to db
+            const csrfToken = getCookie("csrftoken");
+        
+            try {
+                const response = await fetch("/record_hearing_risk/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": csrfToken,
+                    },
+                    body: JSON.stringify({
+                        warning_type: "High Noise Exposure",
+                        exposure_threshold: 10, // Example threshold
+                    }),
+                });
+        
+                const data = await response.json();
+                if (data.status === "success") {
+                    console.log("Hearing risk notification recorded successfully:", data);
+                } else {
+                    console.error("Failed to record hearing risk:", data.message);
+                }
+            } catch (error) {
+                console.error("Error sending risk notification:", error);
+            }
         }
     
         // Setup equalizer

@@ -14,6 +14,7 @@ from wa.views import (
     save_equalizer_settings,
     equalizer_view,
     save_exposure_time,
+    record_hearing_risk,
 )
 
 from profiles import views
@@ -54,4 +55,5 @@ urlpatterns = [
     path("profile/", user_profile, name="user_profile"),
     path('apply_profile_by_name/<str:profile_name>/', views.apply_profile_by_name, name='apply_profile_by_name'),
     path('save_exposure_time/', save_exposure_time, name='save_exposure_time'),
+    path('record_hearing_risk/', record_hearing_risk, name='record_hearing_risk'),
 ]

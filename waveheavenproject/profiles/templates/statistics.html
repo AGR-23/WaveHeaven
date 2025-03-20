@@ -80,9 +80,19 @@
             <!-- Hearing Health Tips -->
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
                 <h2 class="text-xl font-semibold mb-4">Hearing Health Tips</h2>
-                <ul class="list-disc list-inside text-gray-600 dark:text-gray-400">
+                <ul class="space-y-3">
                     {% for tip in health_tips %}
-                        <li>{{ tip }}</li>
+                    <!--Adding some style-->
+                    <li class="flex items-center p-3 border-l-4 rounded-lg shadow-sm
+                               {% if "breaks" in tip %} border-yellow-400 bg-yellow-50 dark:bg-yellow-900 dark:border-yellow-500 
+                               {% elif "high" in tip or "reduce" in tip %} border-red-500 bg-red-50 dark:bg-red-900 dark:border-red-500 
+                               {% else %} border-green-500 bg-green-50 dark:bg-green-900 dark:border-green-500 {% endif %}">
+                        <i class="h-6 w-6 mr-3"
+                           {% if "breaks" in tip %} data-lucide="timer" class="text-yellow-500"
+                           {% elif "high" in tip or "reduce" in tip %} data-lucide="alert-triangle" class="text-red-500"
+                           {% else %} data-lucide="headphones" class="text-green-500" {% endif %}></i>
+                        <span class="text-gray-700 dark:text-gray-300">{{ tip }}</span>
+                    </li>
                     {% endfor %}
                 </ul>
             </div>

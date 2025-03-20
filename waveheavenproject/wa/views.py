@@ -7,7 +7,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from .forms import UserRegisterForm, DeviceForm
 from .models import Device
-from wa.models import UserPreferences, Device, ExposureReport, AudioAdjustmentRecord
+from wa.models import UserPreferences, Device, ExposureReport, AudioAdjustmentRecord, HearingRiskNotification
 
 from django.contrib.auth.models import User  # Importar modelo de usuario
 
@@ -282,3 +282,26 @@ def save_exposure_time(request):
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
     return JsonResponse({'status': 'error'}, status=400)
+
+@csrf_exempt
+def record_hearing_risk(request):
+    if request.method == "POST":
+        data = json.loads(request.body)
+        user = request.user
+        warning_type = data.get("warning_type", "Unknown Risk")
+        exposure_threshold = data.get("exposure_threshold", 10)  # Default to 10 min
+
+        if user.is_authenticated:
+            user_prefs, _ = UserPreferences.objects.get_or_create(user=user)
+
+            # Save the notification in the database
+            notification = HearingRiskNotification.objects.create(
+                user=user,
+                warning_type=warning_type,
+                exposure_threshold=exposure_threshold
+            )
+
+            return JsonResponse({"status": "success", "notification_id": notification.id}, status=201)
+        return JsonResponse({"status": "error", "message": "User not authenticated"}, status=401)
+
+    return JsonResponse({"status": "error", "message": "Invalid request method"}, status=405)
