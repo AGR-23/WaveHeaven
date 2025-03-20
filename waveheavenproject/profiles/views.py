@@ -39,29 +39,20 @@ def apply_profile(request, profile_id):
 @csrf_exempt
 @login_required
 def list_profiles(request):
-    user_prefs, created = UserPreferences.objects.get_or_create(user=request.user)
-    if created or not user_prefs.audio_profiles:
+    user_prefs, _ = UserPreferences.objects.get_or_create(user=request.user)
+    if not user_prefs.audio_profiles or len(user_prefs.audio_profiles) < 3:
         user_prefs.audio_profiles = [
-            {"name": "Music", "bass": 80, "mid": 60, "treble": 50, "environment": "Inside"},
-            {"name": "Podcast", "bass": 40, "mid": 85, "treble": 65, "environment": "Outside"}
+           {"name": "Music", "bass": 80, "mid": 60, "treble": 50, "environment": "Indoor"},
+            {"name": "Podcast", "bass": 40, "mid": 85, "treble": 50, "environment": "Outdoor"},
+            {"name": "Movies", "bass": 90, "mid": 50, "treble": 70, "environment": "Home Theater"},
+            {"name": "Gaming", "bass": 70, "mid": 65, "treble": 75, "environment": "Gaming Room"},
+            {"name": "Calls", "bass": 30, "mid": 95, "treble": 80, "environment": "Office"},
+            {"name": "Relax", "bass": 60, "mid": 50, "treble": 40, "environment": "Quiet Space"},
         ]
         user_prefs.save(update_fields=['audio_profiles'])
 
     return JsonResponse({"profiles": user_prefs.audio_profiles})
 
-@csrf_exempt
-
-@login_required
-def list_profiles22222(request):
-    user_prefs, created = UserPreferences.objects.get_or_create(user=request.user)
-    if created or not user_prefs.audio_profiles:
-        user_prefs.audio_profiles = [
-            {"name": "Music", "bass": 80, "mid": 60, "treble": 50, "environment": "Inside"},
-            {"name": "Podcast", "bass": 40, "mid": 85, "treble": 65, "environment": "Outside"}
-        ]
-        user_prefs.save(update_fields=['audio_profiles'])
-
-    return JsonResponse({"profiles": user_prefs.audio_profiles})
 
 @csrf_exempt
 @login_required
