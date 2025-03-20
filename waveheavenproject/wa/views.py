@@ -7,7 +7,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from .forms import UserRegisterForm, DeviceForm
 from .models import Device
-from wa.models import UserPreferences, Device, ExposureReport
+from wa.models import UserPreferences, Device, ExposureReport, AudioAdjustmentRecord
 
 from django.contrib.auth.models import User  # Importar modelo de usuario
 
@@ -59,6 +59,13 @@ def adjust_volume(request):
         # Guardar el volumen ajustado en la base de datos
         user_prefs.last_adjusted_volume = adjusted_volume
         user_prefs.save()
+
+        # Crear un registro en AudioAdjustmentRecord
+        AudioAdjustmentRecord.objects.create(
+            user=user_prefs,
+            recommended_volume=int(adjusted_volume),  # Asegúrate de que sea un entero
+            detected_noise=0,  # Puedes ajustar este valor según sea necesario
+        )
 
         return JsonResponse({'adjusted_volume': adjusted_volume})
 
@@ -163,28 +170,29 @@ def user_register(request):
     return render(request, "register.html", {"user_form": user_form, "device_form": device_form})
 
 def hearing_test(request):
-    if request.method == "POST":
-        # Obtener los valores del formulario
-        low_volume = float(request.POST.get("low_volume", 50))
-        mid_volume = float(request.POST.get("mid_volume", 50))
-        high_volume = float(request.POST.get("high_volume", 50))
+    user_prefs = UserPreferences.objects.get(user=request.user)
+    
+    if request.method == 'POST':
+        low_volume = float(request.POST.get('low_volume', 50))
+        mid_volume = float(request.POST.get('mid_volume', 50))
+        high_volume = float(request.POST.get('high_volume', 50))
 
-        if request.user.is_authenticated:
-            # Obtener o crear las preferencias del usuario
-            user_prefs, created = UserPreferences.objects.get_or_create(user=request.user)
-            
-            # Actualizar los umbrales de frecuencia
-            user_prefs.low_freq_threshold = low_volume
-            user_prefs.mid_freq_threshold = mid_volume
-            user_prefs.high_freq_threshold = high_volume
+        # Actualizar los campos en UserPreferences
+        user_prefs.low_freq_threshold = low_volume
+        user_prefs.mid_freq_threshold = mid_volume
+        user_prefs.high_freq_threshold = high_volume
+        user_prefs.save()  # Guardar los cambios en la base de datos
 
-            # Guardar el volumen promedio como el ideal
-            user_prefs.ideal_volume = (low_volume + mid_volume + high_volume) / 3
+        # Crear un registro en AudioAdjustmentRecord
+        AudioAdjustmentRecord.objects.create(
+            user=user_prefs,
+            recommended_volume=(low_volume + mid_volume + high_volume) / 3,  # Volumen promedio
+            detected_noise=0,  # Puedes ajustar este valor según sea necesario
+        )
 
-            # Guardar los cambios en la base de datos
-            user_prefs.save()
+        return redirect('dashboard')  # Redirigir al dashboard después de la prueba
 
-            return redirect("dashboard")  # Redirigir al dashboard
+    return render(request, 'hearing_test.html')
 
     return render(request, "hearing_test.html")
 

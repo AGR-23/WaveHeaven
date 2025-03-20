@@ -172,8 +172,6 @@ def user_statistics(request):
         'volume_labels_json': volume_labels_json,
         'health_tips': health_tips,
     })
-    
-from django.views.decorators.csrf import csrf_exempt
 
 @login_required
 def apply_profile_by_name(request, profile_name):
@@ -210,23 +208,46 @@ def user_profile(request):
     else:
         age = "N/A"
 
-    # Obtener las estadísticas del usuario usando el modelo proxy UserStatistics
+    # Definir rangos ideales según la edad
+    def get_ideal_ranges(age):
+        if age == "N/A":
+            return None  # No se puede determinar el rango sin la edad
+        elif age < 18:
+            return {"low": (20.0, 40.0), "mid": (30.0, 50.0), "high": (40.0, 60.0)}  # Rangos para menores de 18
+        elif 18 <= age <= 40:
+            return {"low": (25.0, 45.0), "mid": (35.0, 55.0), "high": (45.0, 65.0)}  # Rangos para adultos jóvenes
+        elif 41 <= age <= 60:
+            return {"low": (30.0, 50.0), "mid": (40.0, 60.0), "high": (50.0, 70.0)}  # Rangos para adultos mayores
+        else:
+            return {"low": (35.0, 55.0), "mid": (45.0, 65.0), "high": (55.0, 75.0)}  # Rangos para mayores de 60
+
+    # Obtener los rangos ideales según la edad
+    ideal_ranges = get_ideal_ranges(age)
+
+    # Lógica para determinar el estado del último test de audición
+    last_test_status = "No Data"
+    if ideal_ranges and (user_prefs.low_freq_threshold != 50.0 or user_prefs.mid_freq_threshold != 50.0 or user_prefs.high_freq_threshold != 50.0):
+        low_in_range = ideal_ranges["low"][0] <= user_prefs.low_freq_threshold <= ideal_ranges["low"][1]
+        mid_in_range = ideal_ranges["mid"][0] <= user_prefs.mid_freq_threshold <= ideal_ranges["mid"][1]
+        high_in_range = ideal_ranges["high"][0] <= user_prefs.high_freq_threshold <= ideal_ranges["high"][1]
+
+        if low_in_range and mid_in_range and high_in_range:
+            last_test_status = "Good"
+        else:
+            last_test_status = "Needs Attention"
+
+    # Obtener las estadísticas del usuario
     user_stats = UserStatistics.objects.filter(user=user_prefs).first()
     total_time = user_stats.get_total_exposure_time() if user_stats else 0
     sessions_this_week = user_stats.get_sessions_last_week() if user_stats else 0
 
     # Obtener los ajustes de volumen recientes
-    audio_adjustments = AudioAdjustmentRecord.objects.filter(user=user_prefs).order_by('-timestamp')[:10]  # Últimos 10 ajustes
+    audio_adjustments = AudioAdjustmentRecord.objects.filter(user=user_prefs).order_by('-timestamp')[:10]
     volume_data = [adjustment.recommended_volume for adjustment in audio_adjustments]
     volume_labels = [adjustment.timestamp.strftime('%H:%M') for adjustment in audio_adjustments]
 
     # Obtener las notificaciones de riesgo
-    risk_notifications = HearingRiskNotification.objects.filter(user=user_prefs).order_by('-date_and_time')[:5]  # Últimas 5 notificaciones
-
-    # Lógica para determinar el estado del último test de audición
-    last_test_status = "No Data"
-    if user_prefs.low_freq_threshold != 50.0 or user_prefs.mid_freq_threshold != 50.0 or user_prefs.high_freq_threshold != 50.0:
-        last_test_status = "Good"  # O cualquier otra lógica que desees
+    risk_notifications = HearingRiskNotification.objects.filter(user=user_prefs).order_by('-date_and_time')[:5]
 
     # Pasar los datos a la plantilla
     context = {
@@ -235,13 +256,14 @@ def user_profile(request):
         "preferred_volume": round(user_prefs.ideal_volume, 1),
         "total_time": total_time,
         "sessions_this_week": sessions_this_week,
-        "volume_data": json.dumps(volume_data, cls=DjangoJSONEncoder),  # Datos de volumen para el gráfico
-        "volume_labels": json.dumps(volume_labels, cls=DjangoJSONEncoder),  # Etiquetas de tiempo para el gráfico
-        "risk_notifications": risk_notifications,  # Notificaciones de riesgo
-        "last_test_status": last_test_status,  # Estado del último test de audición
-        "low_freq_threshold": user_prefs.low_freq_threshold,  # Umbral de frecuencia baja
-        "mid_freq_threshold": user_prefs.mid_freq_threshold,  # Umbral de frecuencia media
-        "high_freq_threshold": user_prefs.high_freq_threshold,  # Umbral de frecuencia alta
+        "volume_data": json.dumps(volume_data, cls=DjangoJSONEncoder),
+        "volume_labels": json.dumps(volume_labels, cls=DjangoJSONEncoder),
+        "risk_notifications": risk_notifications,
+        "last_test_status": last_test_status,
+        "low_freq_threshold": user_prefs.low_freq_threshold,
+        "mid_freq_threshold": user_prefs.mid_freq_threshold,
+        "high_freq_threshold": user_prefs.high_freq_threshold,
+        "ideal_ranges": ideal_ranges,  # Pasar los rangos ideales a la plantilla (opcional)
     }
     
     return render(request, "profile.html", context)

@@ -108,7 +108,7 @@
                 <p><strong>Sessions This Week:</strong> {{ sessions_this_week }}</p>
             </div>
 
-            <!-- Hearing Health -->
+            <!-- Sección de Hearing Health -->
             <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-6">
                 <h3 class="text-lg font-bold">Hearing Health</h3>
                 <p><strong>Last Test:</strong> 
@@ -119,6 +119,9 @@
                     {% endif %}
                 </p>
                 <p><strong>Status:</strong> {{ last_test_status }}</p>
+                <p><strong>Low Frequency Threshold:</strong> {{ low_freq_threshold }} (Ideal: {{ ideal_ranges.low.0 }} - {{ ideal_ranges.low.1 }})</p>
+                <p><strong>Mid Frequency Threshold:</strong> {{ mid_freq_threshold }} (Ideal: {{ ideal_ranges.mid.0 }} - {{ ideal_ranges.mid.1 }})</p>
+                <p><strong>High Frequency Threshold:</strong> {{ high_freq_threshold }} (Ideal: {{ ideal_ranges.high.0 }} - {{ ideal_ranges.high.1 }})</p>
             </div>
 
             <!-- Volume Over Time Chart -->
