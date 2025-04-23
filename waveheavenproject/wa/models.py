@@ -22,6 +22,7 @@ class UserPreferences(models.Model):
         max_length=10,
     )
     audio_profiles = models.JSONField(default=list)  # Campo para almacenar perfiles de audio
+    active_profile = models.CharField(max_length=100, blank=True) # Campo para almacenar el perfil activo
 
     def __str__(self):
         return f"Preferencias de {self.user.username}"

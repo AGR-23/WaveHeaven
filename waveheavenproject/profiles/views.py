@@ -18,6 +18,7 @@ import json
 from wa.models import UserPreferences, ExposureReport, AudioAdjustmentRecord, HearingRiskNotification
 from profiles.models import UserStatistics
 
+
 def profiles_page(request):
     return render(request, 'sound_profiles.html')
 
@@ -42,7 +43,7 @@ def list_profiles(request):
     user_prefs, _ = UserPreferences.objects.get_or_create(user=request.user)
     if not user_prefs.audio_profiles or len(user_prefs.audio_profiles) < 3:
         user_prefs.audio_profiles = [
-           {"name": "Music", "bass": 80, "mid": 60, "treble": 50, "environment": "Indoor"},
+            {"name": "Music", "bass": 80, "mid": 60, "treble": 50, "environment": "Indoor"},
             {"name": "Podcast", "bass": 40, "mid": 85, "treble": 50, "environment": "Outdoor"},
             {"name": "Movies", "bass": 90, "mid": 50, "treble": 70, "environment": "Home Theater"},
             {"name": "Gaming", "bass": 70, "mid": 65, "treble": 75, "environment": "Gaming Room"},
@@ -50,8 +51,12 @@ def list_profiles(request):
             {"name": "Relax", "bass": 60, "mid": 50, "treble": 40, "environment": "Quiet Space"},
         ]
         user_prefs.save(update_fields=['audio_profiles'])
+        print("👉 Usuario autenticado:", request.user.username)
 
-    return JsonResponse({"profiles": user_prefs.audio_profiles})
+    return JsonResponse({
+        "status": "success",
+        "profiles": user_prefs.audio_profiles
+    })
 
 
 @csrf_exempt
@@ -190,27 +195,51 @@ def user_statistics(request):
         'health_tips': health_tips,
     })
 
+@csrf_exempt
 @login_required
 def apply_profile_by_name(request, profile_name):
-    user_prefs = UserPreferences.objects.get(user=request.user)
-    profile = next((p for p in user_prefs.audio_profiles if p['name'].lower() == profile_name.lower()), None)
+    
+    try:
+        # Verificar autenticación
+        if not request.user.is_authenticated:
+            return JsonResponse(
+                {"status": "error", "message": "Authentication required"}, 
+                status=401,
+                json_dumps_params={'ensure_ascii': False}
+            )
 
-    if profile:
-        return JsonResponse({'status': 'success', 'profile': profile})
+        user_prefs = UserPreferences.objects.get(user=request.user)
+        profiles = user_prefs.get_audio_profiles()
 
-    return JsonResponse({'error': 'Profile not found'}, status=404)
+        # Búsqueda robusta
+        profile = next(
+            (p for p in profiles 
+             if str(p.get('name', '')).strip().lower() == profile_name.strip().lower()), 
+            None
+        )
 
-from django.shortcuts import render, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from .models import UserPreferences
+        if not profile:
+            return JsonResponse(
+                {"status": "error", "message": f"Perfil '{profile_name}' no encontrado"},
+                status=404,
+                json_dumps_params={'ensure_ascii': False}
+            )
 
-from django.shortcuts import render, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from django.views.decorators.csrf import csrf_exempt
-from django.core.serializers.json import DjangoJSONEncoder
-from datetime import date
-import json
-from wa.models import UserPreferences, AudioAdjustmentRecord, HearingRiskNotification
+        # Actualización segura
+        user_prefs.active_profile = profile_name
+        user_prefs.save(update_fields=['active_profile'])
+
+        return JsonResponse({
+            "status": "success",
+            "applied_profile": profile
+        }, json_dumps_params={'ensure_ascii': False})
+
+    except Exception as e:
+        return JsonResponse(
+            {"status": "error", "message": str(e)},
+            status=500,
+            json_dumps_params={'ensure_ascii': False}
+        )
 
 @csrf_exempt
 @login_required
@@ -224,6 +253,7 @@ def user_profile(request):
         age = today.year - user_prefs.birthday.year - ((today.month, today.day) < (user_prefs.birthday.month, user_prefs.birthday.day))
     else:
         age = "N/A"
+
 
     # Definir rangos ideales según la edad
     def get_ideal_ranges(age):

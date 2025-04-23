@@ -145,7 +145,11 @@ def user_register(request):
                     "mid": 50,
                     "treble": 50,
                     "environment": "Indoor"
-                }
+                },
+                {"name": "Gaming", "bass": 70, "mid": 65, "treble": 75, "environment": "Gaming Room"},
+                {"name": "Calls", "bass": 30, "mid": 95, "treble": 80, "environment": "Office"},
+                {"name": "Relax", "bass": 60, "mid": 50, "treble": 40, "environment": "Quiet Space"},
+                
             ]
             user_prefs.save()
 
@@ -248,7 +252,7 @@ def save_equalizer_settings(request):
             # Guardar los perfiles actualizados
             user_prefs.save_audio_profiles(profiles)
 
-            return JsonResponse({'status': 'success', 'profile': new_profile})
+            return JsonResponse({'status': 'success', 'applied_profile': new_profile})
 
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
@@ -256,7 +260,6 @@ def save_equalizer_settings(request):
     return JsonResponse({'error': 'Invalid request method'}, status=400)
 
 @csrf_exempt
-@login_required
 def save_exposure_time(request):
     if request.method == 'POST':
         try:

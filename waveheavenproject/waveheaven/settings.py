@@ -123,3 +123,20 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:8000/*",
+    "chrome-extension://dldfkbaajdolhpholkgemedpnofekioj",
+]
+# Hosts permitidos
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+
+# Forzar respuestas JSON en producción
+if not DEBUG:
+    REST_FRAMEWORK = {
+        'DEFAULT_RENDERER_CLASSES': (
+            'rest_framework.renderers.JSONRenderer',
+        )
+    }
+    
+CORS_ALLOW_CREDENTIALS = True

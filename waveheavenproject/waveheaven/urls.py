@@ -56,4 +56,4 @@ urlpatterns = [
     path('apply_profile_by_name/<str:profile_name>/', views.apply_profile_by_name, name='apply_profile_by_name'),
     path('save_exposure_time/', save_exposure_time, name='save_exposure_time'),
     path('record_hearing_risk/', record_hearing_risk, name='record_hearing_risk'),
-]
+    ]
