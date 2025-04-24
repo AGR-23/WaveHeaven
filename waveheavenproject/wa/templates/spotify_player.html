@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Reproductor WaveHeaven 🎧</title>
+</head>
+<body>
+  <h2>🎵 Reproductor Spotify con Web Playback SDK</h2>
+  <p>Si tienes Spotify abierto en otro dispositivo, puedes controlar la música desde aquí.</p>
+
+  <button onclick="togglePlay()">▶️ Reproducir / Pausar</button>
+  <button onclick="nextTrack()">⏭️ Siguiente</button>
+  <button onclick="previousTrack()">⏮️ Anterior</button>
+
+  <div id="status" style="margin-top: 20px; color: green;"></div>
+
+  <script src="https://sdk.scdn.co/spotify-player.js"></script>
+  <script>
+    window.onSpotifyWebPlaybackSDKReady = () => {
+      const token = "{{ token }}";
+      const player = new Spotify.Player({
+        name: 'WaveHeaven Web Player',
+        getOAuthToken: cb => { cb(token); },
+        volume: 0.5
+      });
+
+      // Escuchar eventos del player
+      player.addListener('ready', ({ device_id }) => {
+        document.getElementById('status').innerText = '✅ Player listo. ID de dispositivo: ' + device_id;
+
+        // Transferir la reproducción al nuevo dispositivo
+        fetch('https://api.spotify.com/v1/me/player', {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            device_ids: [device_id],
+            play: true
+          }),
+        });
+      });
+
+      player.addListener('not_ready', ({ device_id }) => {
+        document.getElementById('status').innerText = '❌ Player no está listo: ' + device_id;
+      });
+
+      player.addListener('initialization_error', ({ message }) => {
+        console.error(message);
+        alert("Error al inicializar el reproductor: " + message);
+      });
+
+      player.addListener('authentication_error', ({ message }) => {
+        console.error(message);
+        alert("Error de autenticación: " + message);
+      });
+
+      player.addListener('account_error', ({ message }) => {
+        console.error(message);
+        alert("Error de cuenta (¿es cuenta premium?): " + message);
+      });
+
+      player.addListener('playback_error', ({ message }) => {
+        console.error(message);
+        alert("Error de reproducción: " + message);
+      });
+
+      // Controles globales
+      window.togglePlay = () => {
+        player.togglePlay().catch(e => console.error(e));
+      };
+
+      window.nextTrack = () => {
+        player.nextTrack().catch(e => console.error(e));
+      };
+
+      window.previousTrack = () => {
+        player.previousTrack().catch(e => console.error(e));
+      };
+
+      player.connect();
+    };
+  </script>
+</body>
+</html>

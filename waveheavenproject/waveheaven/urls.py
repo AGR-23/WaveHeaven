@@ -15,6 +15,10 @@ from wa.views import (
     equalizer_view,
     save_exposure_time,
     record_hearing_risk,
+    spotify_login,
+    spotify_callback,
+    spotify_player,
+    spotify_playback
 )
 
 from profiles import views
@@ -56,4 +60,10 @@ urlpatterns = [
     path('apply_profile_by_name/<str:profile_name>/', views.apply_profile_by_name, name='apply_profile_by_name'),
     path('save_exposure_time/', save_exposure_time, name='save_exposure_time'),
     path('record_hearing_risk/', record_hearing_risk, name='record_hearing_risk'),
+    
+    # Spotify API
+    path('spotify/', spotify_login, name='spotify_login'),
+    path('spotify/callback/', spotify_callback, name='spotify_callback'),
+    path('spotify/player/', spotify_player, name='spotify_player'),
+    path('spotify/playback/', spotify_playback, name='spotify_playback'),
     ]

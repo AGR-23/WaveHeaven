@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Spotify Web Player - WaveHeaven</title>
+</head>
+<body>
+    <h1>🎧 Spotify Playback</h1>
+    <p id="status">Cargando SDK...</p>
+
+    <div style="margin-top: 20px;">
+        <button onclick="togglePlay()">▶️ Play / Pause</button>
+        <button onclick="nextTrack()">⏭️ Siguiente</button>
+        <button onclick="previousTrack()">⏮️ Anterior</button>
+    </div>
+
+    <script src="https://sdk.scdn.co/spotify-player.js"></script>
+    <script>
+        window.onSpotifyWebPlaybackSDKReady = () => {
+            const token = "{{ token }}";
+            const player = new Spotify.Player({
+                name: 'WaveHeaven Web Player',
+                getOAuthToken: cb => { cb(token); },
+                volume: 0.5
+            });
+
+            player.addListener('ready', ({ device_id }) => {
+                console.log("✅ Web Playback SDK ready. Device ID:", device_id);
+                document.getElementById("status").innerText = "✅ Conectado como dispositivo: " + device_id;
+
+                // Activar este dispositivo
+                fetch('https://api.spotify.com/v1/me/player', {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        device_ids: [device_id],
+                        play: true
+                    }),
+                });
+            });
+
+            player.addListener('not_ready', ({ device_id }) => {
+                console.log("❌ El dispositivo ya no está listo:", device_id);
+                document.getElementById("status").innerText = "❌ Dispositivo desconectado.";
+            });
+
+            player.addListener('initialization_error', ({ message }) => alert("⚠️ Error al inicializar: " + message));
+            player.addListener('authentication_error', ({ message }) => alert("⚠️ Error de autenticación: " + message));
+            player.addListener('account_error', ({ message }) => alert("⚠️ Spotify Premium requerido: " + message));
+            player.addListener('playback_error', ({ message }) => alert("⚠️ Error de reproducción: " + message));
+
+            // Controles de reproducción
+            window.togglePlay = () => player.togglePlay();
+            window.nextTrack = () => player.nextTrack();
+            window.previousTrack = () => player.previousTrack();
+
+            player.connect();
+        };
+    </script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-from django.http import JsonResponse, HttpResponseNotAllowed
+from django.http import JsonResponse, HttpResponseNotAllowed, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
 from datetime import date
@@ -11,8 +11,14 @@ from wa.models import UserPreferences, Device, ExposureReport, AudioAdjustmentRe
 
 from django.contrib.auth.models import User  # Importar modelo de usuario
 
+from .spotify_api import (
+    get_auth_url,
+    get_token_from_code,
+    get_current_playback,
+)
+
 def home(request):
-    return render(request, 'index.html')  # Asegúrate de que el archivo index.html esté en la carpeta templates
+    return render(request, 'index.html') 
 
 @csrf_exempt
 def toggle_microphone(request):
@@ -308,3 +314,34 @@ def record_hearing_risk(request):
         return JsonResponse({"status": "error", "message": "User not authenticated"}, status=401)
 
     return JsonResponse({"status": "error", "message": "Invalid request method"}, status=405)
+
+# -------------------- SPOTIFY --------------------
+
+def spotify_login(request):
+    return redirect(get_auth_url())
+
+def spotify_callback(request):
+    code = request.GET.get("code")
+    if not code:
+        return HttpResponse("❌ Código no proporcionado por Spotify.", status=400)
+
+    try:
+        token_data = get_token_from_code(code)
+        token = token_data["access_token"]
+        request.session["spotify_token"] = token
+        return redirect("spotify_playback")  # Redirige a tu vista con Web SDK
+    except Exception as e:
+        # Muestra el error directamente en texto plano
+        return HttpResponse(f"❌ Ocurrió un error durante la autenticación con Spotify:<br><pre>{str(e)}</pre>", status=500)
+
+def spotify_playback(request):
+    token = request.session.get("spotify_token")
+    if not token:
+        return redirect(get_auth_url())
+    return render(request, "spotify_playback.html", {"token": token})
+
+def spotify_player(request):
+    token = request.session.get("spotify_token")
+    if not token:
+        return redirect(get_auth_url())
+    return render(request, "spotify_player.html", {"token": token})
