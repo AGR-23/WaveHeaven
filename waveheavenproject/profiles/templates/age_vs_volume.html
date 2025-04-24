@@ -1,0 +1,70 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <title>Age vs Average Volume</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-white text-gray-900 p-8 dark:bg-gray-900 dark:text-white">
+    <h1 class="text-3xl font-bold text-center mb-8">Edad Promedio vs Volumen Promedio</h1>
+
+    <div class="max-w-4xl mx-auto p-6 bg-white dark:bg-gray-800 rounded shadow">
+        <canvas id="ageVolumeChart" height="100"></canvas>
+    </div>
+
+    <!-- Django data to JavaScript -->
+    <script>
+        const volumeByAge = {{ volume_by_age_json|safe }};
+        const labels = Object.keys(volumeByAge);
+        const data = Object.values(volumeByAge);
+
+        const ctx = document.getElementById('ageVolumeChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Volumen Promedio (%)',
+                    data: data,
+                    backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                    borderColor: 'rgba(59, 130, 246, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        title: {
+                            display: true,
+                            text: 'Volumen Promedio (%)',
+                            font: {
+                                size: 14
+                            }
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Edad',
+                            font: {
+                                size: 14
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

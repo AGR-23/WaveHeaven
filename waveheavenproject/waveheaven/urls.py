@@ -26,7 +26,8 @@ from profiles import views
 
 from profiles.views import (
     user_profile,
-    user_statistics
+    user_statistics,
+    age_vs_volume_view
 )
 
 urlpatterns = [
@@ -61,6 +62,8 @@ urlpatterns = [
     path('apply_profile_by_name/<str:profile_name>/', views.apply_profile_by_name, name='apply_profile_by_name'),
     path('save_exposure_time/', save_exposure_time, name='save_exposure_time'),
     path('record_hearing_risk/', record_hearing_risk, name='record_hearing_risk'),
+    path('age-vs-volume/', views.age_vs_volume_view, name='age_vs_volume'),
+    
     
     # Spotify API
     path('spotify/', spotify_login, name='spotify_login'),

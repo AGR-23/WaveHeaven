@@ -7,7 +7,7 @@
     <title>WaveHeaven - User Statistics</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -77,12 +77,18 @@
                 <canvas id="volumeChart"></canvas>
             </div>
 
+            <!-- Link to Age vs Volume Chart -->
+            <div class="text-center mb-6">
+                <a href="{% url 'age_vs_volume' %}" class="inline-block px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition">
+                    View Volume vs Age Chart
+                </a>
+            </div>
+
             <!-- Hearing Health Tips -->
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
                 <h2 class="text-xl font-semibold mb-4">Hearing Health Tips</h2>
                 <ul class="space-y-3">
                     {% for tip in health_tips %}
-                    <!--Adding some style-->
                     <li class="flex items-center p-3 border-l-4 rounded-lg shadow-sm
                                {% if "breaks" in tip %} border-yellow-400 bg-yellow-50 dark:bg-yellow-900 dark:border-yellow-500 
                                {% elif "high" in tip or "reduce" in tip %} border-red-500 bg-red-50 dark:bg-red-900 dark:border-red-500 
@@ -113,20 +119,18 @@
     {{ volume_labels_json|json_script:"volumeLabels" }}
 
     <script>
-        // Obtener los datos desde el script generado por Django
         const volumeData = {
-            labels: JSON.parse(document.getElementById('volumeLabels').textContent),  // Eje X: Tiempo
+            labels: JSON.parse(document.getElementById('volumeLabels').textContent),
             datasets: [{
-                label: 'Volume (%)',  // Etiqueta del conjunto de datos
-                data: JSON.parse(document.getElementById('volumeData').textContent),  // Eje Y: Volumen
-                borderColor: 'rgba(59, 130, 246, 1)',  // Color de la línea
-                backgroundColor: 'rgba(59, 130, 246, 0.2)',  // Color de relleno
-                fill: true,  // Rellenar el área bajo la línea
-                tension: 0.4  // Suavizar la línea
+                label: 'Volume (%)',
+                data: JSON.parse(document.getElementById('volumeData').textContent),
+                borderColor: 'rgba(59, 130, 246, 1)',
+                backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                fill: true,
+                tension: 0.4
             }]
         };
-    
-        // Configuración del gráfico
+
         const volumeConfig = {
             type: 'line',
             data: volumeData,
@@ -135,44 +139,30 @@
                     x: {
                         title: {
                             display: true,
-                            text: 'Time',  // Etiqueta del eje X
-                            font: {
-                                size: 14,
-                                weight: 'bold'
-                            }
+                            text: 'Time',
+                            font: { size: 14, weight: 'bold' }
                         },
-                        ticks: {
-                            font: {
-                                size: 12
-                            }
-                        }
+                        ticks: { font: { size: 12 } }
                     },
                     y: {
                         title: {
                             display: true,
-                            text: 'Volume (%)',  // Etiqueta del eje Y
-                            font: {
-                                size: 14,
-                                weight: 'bold'
-                            }
+                            text: 'Volume (%)',
+                            font: { size: 14, weight: 'bold' }
                         },
                         beginAtZero: true,
                         max: 100,
-                        ticks: {
-                            font: {
-                                size: 12
-                            }
-                        }
+                        ticks: { font: { size: 12 } }
                     }
                 },
                 plugins: {
                     tooltip: {
-                        enabled: true,  // Habilitar tooltips
+                        enabled: true,
                         mode: 'index',
                         intersect: false
                     },
                     legend: {
-                        display: true,  // Mostrar la leyenda
+                        display: true,
                         position: 'top'
                     }
                 },
@@ -180,12 +170,8 @@
                 maintainAspectRatio: true
             }
         };
-    
-        // Renderizar el gráfico
-        const volumeChart = new Chart(
-            document.getElementById('volumeChart'),
-            volumeConfig
-        );
+
+        new Chart(document.getElementById('volumeChart'), volumeConfig);
     </script>
 </body>
 </html>

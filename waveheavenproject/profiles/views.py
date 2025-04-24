@@ -2,6 +2,7 @@ import json
 from datetime import date, timedelta
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
+from django.db.models import Avg
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from wa.models import UserPreferences
@@ -17,6 +18,18 @@ from django.core.serializers.json import DjangoJSONEncoder
 import json
 from wa.models import UserPreferences, ExposureReport, AudioAdjustmentRecord, HearingRiskNotification
 from profiles.models import UserStatistics
+from django.shortcuts import render
+from django.contrib.auth.models import User
+from wa.models import UserPreferences, AudioAdjustmentRecord
+from datetime import date
+import json
+from collections import defaultdict
+from django.shortcuts import render
+from django.contrib.auth.models import User
+from wa.models import UserPreferences, AudioAdjustmentRecord
+from datetime import date
+from collections import defaultdict
+import json
 
 
 def profiles_page(request):
@@ -153,6 +166,8 @@ def user_statistics(request):
     # Convertir los datos a JSON
     volume_data_json = json.dumps(volume_data, cls=DjangoJSONEncoder)
     volume_labels_json = json.dumps(volume_labels, cls=DjangoJSONEncoder)
+    average_volume = round(sum(volume_data) / len(volume_data), 1) if volume_data else 0
+
 
     # Consejos de salud auditiva RF:17.2
     health_tips = [
@@ -314,3 +329,25 @@ def user_profile(request):
     }
     
     return render(request, "profile.html", context)
+
+
+def age_vs_volume_view(request):
+    volume_by_age = defaultdict(list)
+
+    for prefs in UserPreferences.objects.exclude(birthday__isnull=True):
+        adjustments = AudioAdjustmentRecord.objects.filter(user=prefs)
+        if adjustments.exists():
+            avg_volume = sum(a.recommended_volume for a in adjustments) / len(adjustments)
+            age = date.today().year - prefs.birthday.year
+            volume_by_age[age].append(avg_volume)
+
+    # Agrupar promedios por edad
+    volume_by_age_avg = {
+        str(age): round(sum(vols) / len(vols), 2)
+        for age, vols in volume_by_age.items()
+        if vols
+    }
+
+    return render(request, 'age_vs_volume.html', {
+        'volume_by_age_json': json.dumps(volume_by_age_avg),
+    })
