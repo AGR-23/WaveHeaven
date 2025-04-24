@@ -1,6 +1,7 @@
 from django.http import JsonResponse, HttpResponseNotAllowed, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
+import joblib
 from datetime import date
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
@@ -10,6 +11,24 @@ from .models import Device
 from wa.models import UserPreferences, Device, ExposureReport, AudioAdjustmentRecord, HearingRiskNotification
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User  # Importar modelo de usuario
+
+model = joblib.load('hearing_risk_model.pkl') # llamar el modelo de riesgo auditivo
+
+def predict_user_risk(user): # funcion para predecir el riesgo auditivo con el modelo
+    report = ExposureReport.objects.filter(user=user).last() #agarra el último informe de exposición
+    if report:
+        data = [[
+            user.ideal_volume,
+            user.last_adjusted_volume,
+            int(user.microphone_active),
+            user.low_freq_threshold,
+            user.mid_freq_threshold,
+            user.high_freq_threshold,
+            report.total_exposure_time
+        ]]
+        risk = model.predict(data)[0] # Predecir el riesgo auditivo
+        return ['Low', 'Medium', 'High'][risk]
+    return 'Unknown'
 
 from .spotify_api import (
     get_auth_url,
@@ -199,7 +218,13 @@ def user_logout(request):
 def user_dashboard(request):
     user_prefs, _ = UserPreferences.objects.get_or_create(user=request.user)
     profiles = user_prefs.get_audio_profiles()
-    return render(request, "dashboard.html", {"profiles": profiles})
+
+    hearing_risk = predict_user_risk(user_prefs) # Predecir el riesgo auditivo del usuario
+
+    return render(request, "dashboard.html", {
+        "profiles": profiles,
+        "hearing_risk": hearing_risk
+        })
 
 # implementar la vista para mostrar el ecualizador FR:O7
 @login_required
