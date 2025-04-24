@@ -8,7 +8,7 @@ from django.contrib.auth.decorators import login_required
 from .forms import UserRegisterForm, DeviceForm
 from .models import Device
 from wa.models import UserPreferences, Device, ExposureReport, AudioAdjustmentRecord, HearingRiskNotification
-
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User  # Importar modelo de usuario
 
 from .spotify_api import (
@@ -345,3 +345,18 @@ def spotify_player(request):
     if not token:
         return redirect(get_auth_url())
     return render(request, "spotify_player.html", {"token": token})
+
+@login_required
+def spotify_search_playback(request):
+    token = request.session.get("spotify_token")
+    if not token:
+        return redirect("spotify_login")
+    
+    # Obtener perfiles personalizados del usuario
+    user_prefs = UserPreferences.objects.get(user=request.user)
+    profiles = user_prefs.get_audio_profiles()
+
+    return render(request, "spotify_search_playback.html", {
+        "token": token,
+        "profiles": profiles
+    })

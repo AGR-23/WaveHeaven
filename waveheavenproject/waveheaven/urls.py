@@ -18,7 +18,8 @@ from wa.views import (
     spotify_login,
     spotify_callback,
     spotify_player,
-    spotify_playback
+    spotify_playback,
+    spotify_search_playback
 )
 
 from profiles import views
@@ -66,4 +67,6 @@ urlpatterns = [
     path('spotify/callback/', spotify_callback, name='spotify_callback'),
     path('spotify/player/', spotify_player, name='spotify_player'),
     path('spotify/playback/', spotify_playback, name='spotify_playback'),
+    path('spotify/search/', spotify_search_playback, name='spotify_search_playback'),
+
     ]

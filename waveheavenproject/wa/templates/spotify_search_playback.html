@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>🎧 Buscar y Reproducir - WaveHeaven</title>
+    <style>
+        body { font-family: sans-serif; margin: 40px; }
+        input, button, select { padding: 10px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>🎵 Buscar y Reproducir en Spotify</h1>
+
+    <label for="profile">Perfil de sonido:</label>
+    <select id="profileSelect" onchange="applyProfile()">
+        {% for profile in profiles %}
+            <option value="{{ profile.volume|default:70 }}" data-profile='{{ profile|safe }}'>
+                {{ profile.name }}
+            </option>
+        {% endfor %}
+    </select>
+
+    <br>
+    <input type="text" id="searchInput" placeholder="Busca una canción..." />
+    <button onclick="searchTracks()">🔍 Buscar</button>
+
+    <div id="results"></div>
+
+    <script src="https://sdk.scdn.co/spotify-player.js"></script>
+    <script>
+        const token = "{{ token }}";
+        let player, device_id;
+
+        window.onSpotifyWebPlaybackSDKReady = () => {
+            player = new Spotify.Player({
+                name: 'WaveHeaven Search Player',
+                getOAuthToken: cb => { cb(token); },
+                volume: 0.5
+            });
+
+            player.addListener('ready', ({ device_id: id }) => {
+                device_id = id;
+                console.log('Player ready with device ID:', device_id);
+            });
+
+            player.connect();
+        };
+
+        function searchTracks() {
+            const query = document.getElementById('searchInput').value;
+            fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=5`, {
+                headers: { 'Authorization': 'Bearer ' + token }
+            })
+            .then(res => res.json())
+            .then(data => {
+                const results = data.tracks.items;
+                const container = document.getElementById('results');
+                container.innerHTML = '';
+
+                results.forEach(track => {
+                    const html = `
+                        <div>
+                            <img src="${track.album.images[0].url}" width="80" />
+                            <strong>${track.name}</strong> - ${track.artists.map(a => a.name).join(', ')}
+                            <button onclick="playTrack('${track.uri}')">▶️ Reproducir</button>
+                        </div>
+                        <hr>
+                    `;
+                    container.innerHTML += html;
+                });
+            });
+        }
+
+        function playTrack(uri) {
+            fetch(`https://api.spotify.com/v1/me/player/play?device_id=${device_id}`, {
+                method: 'PUT',
+                body: JSON.stringify({ uris: [uri] }),
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                    'Content-Type': 'application/json'
+                }
+            });
+        }
+
+        function applyProfile() {
+            const volume = parseFloat(document.getElementById('profileSelect').value) / 100;
+            player.setVolume(volume).then(() => {
+                console.log('🎚️ Volumen ajustado según perfil:', volume);
+            });
+        }
+    </script>
+</body>
+</html>
