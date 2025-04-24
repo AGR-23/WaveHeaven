@@ -101,72 +101,49 @@ def set_sound_category(request):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
-
 @csrf_exempt
 def user_register(request):
     if request.method == "POST":
         user_form = UserRegisterForm(request.POST)
         device_form = DeviceForm(request.POST)
-        
+
         if user_form.is_valid() and device_form.is_valid():
-            # Guardar el usuario
+            # Crear usuario
             user = user_form.save(commit=False)
             user.set_password(user_form.cleaned_data["password"])
             user.save()
 
-            # Obtener la fecha de nacimiento desde el formulario
             birthday = user_form.cleaned_data.get("birthday")
 
-            # Calcular la edad
-            today = date.today()
-            age = today.year - birthday.year - ((today.month, today.day) < (birthday.month, birthday.day))
-
-            # Crear UserPreferences para el usuario con perfiles por defecto
+            # Crear UserPreferences
             user_prefs = UserPreferences.objects.create(
                 user=user,
                 name=user_form.cleaned_data.get("username"),
                 email=user_form.cleaned_data.get("email"),
-                birthday=birthday,  # Guardar la fecha de nacimiento
+                birthday=birthday,
             )
 
-            # Agregar perfiles de audio por defecto
+            # Asignar microphone_active según lo recibido en el formulario
+            microphone_access = request.POST.get("microphone_access")
+            user_prefs.microphone_active = (microphone_access == "Sí")
+
+            # Perfiles de audio por defecto
             user_prefs.audio_profiles = [
-                {
-                    "name": "Music",
-                    "bass": 80,
-                    "mid": 60,
-                    "treble": 50,
-                    "environment": "Indoor"
-                },
-                {
-                    "name": "Podcast",
-                    "bass": 40,
-                    "mid": 85,
-                    "treble": 50,
-                    "environment": "Outdoor"
-                },
-                {
-                    "name": "Call",
-                    "bass": 50,
-                    "mid": 50,
-                    "treble": 50,
-                    "environment": "Indoor"
-                },
+                {"name": "Music", "bass": 80, "mid": 60, "treble": 50, "environment": "Indoor"},
+                {"name": "Podcast", "bass": 40, "mid": 85, "treble": 50, "environment": "Outdoor"},
+                {"name": "Call", "bass": 50, "mid": 50, "treble": 50, "environment": "Indoor"},
                 {"name": "Gaming", "bass": 70, "mid": 65, "treble": 75, "environment": "Gaming Room"},
                 {"name": "Calls", "bass": 30, "mid": 95, "treble": 80, "environment": "Office"},
                 {"name": "Relax", "bass": 60, "mid": 50, "treble": 40, "environment": "Quiet Space"},
-                
             ]
             user_prefs.save()
 
-            # Guardar el dispositivo asociado al UserPreferences
+            # Guardar dispositivo (sin type ni headphone_compatibility)
             device = device_form.save(commit=False)
-            device.user = user_prefs  # Asignar UserPreferences en lugar de User
+            device.user = user_prefs
             device.save()
 
-            # Iniciar sesión automáticamente después del registro
             login(request, user)
-
             return redirect("hearing_test")
 
     else:

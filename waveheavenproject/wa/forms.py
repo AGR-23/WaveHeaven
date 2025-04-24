@@ -28,15 +28,16 @@ class UserRegisterForm(forms.ModelForm):
 
 
 class DeviceForm(forms.ModelForm):
-    DEVICE_CHOICES = [
-        ("Phone", "Phone"),
-        ("Computer", "Computer")
+    OS_CHOICES = [
+        ("Android", "Android"),
+        ("iOS", "iOS"),
+        ("Otro", "Otro"),
     ]
     
     type = forms.ChoiceField(
-        choices=DEVICE_CHOICES,
+        choices=OS_CHOICES,
         widget=forms.Select,
-        label="Device Type"
+        label="Operating System"
     )
 
     class Meta:
