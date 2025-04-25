@@ -10,9 +10,9 @@ WaveHeaven is a web application developed with Django that provides an intellige
 
 [Running the Application](https://github.com/AGR-23/WaveHeaven?tab=readme-ov-file#running-the-application)
 
-[Installing the Chrome Extension](# Installing the Chrome Extension)
+[Installing the Chrome Extension](https://github.com/AGR-23/WaveHeaven?tab=readme-ov-file#installing-the-chrome-extension)
 
-[How to Use the Extension](# How to Use the Extension)
+[How to Use the Extension](https://github.com/AGR-23/WaveHeaven?tab=readme-ov-file#how-to-use-the-extension)
 ****
 
 ## Prerequisites
