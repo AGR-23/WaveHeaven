@@ -10,6 +10,9 @@ WaveHeaven is a web application developed with Django that provides an intellige
 
 [Running the Application](https://github.com/AGR-23/WaveHeaven?tab=readme-ov-file#running-the-application)
 
+[Installing the Chrome Extension](# Installing the Chrome Extension)
+
+[How to Use the Extension](# How to Use the Extension)
 ****
 
 ## Prerequisites
@@ -81,3 +84,41 @@ Open your favorite web browser and navigate to the following URL:
 http://127.0.0.1:8000/
 ```
 **You should now see the WaveHeaven homepage.**
+
+**Deactivating the Virtual Environment**
+Once you're done using WaveHeaven, it's good practice to deactivate your virtual environment. Simply run:
+```
+deactivate
+```
+
+# Installing the Chrome Extension
+This extension works only on Google Chrome. Follow these steps to install it:
+
+- Open Chrome and click the three-dot menu in the top right corner.
+
+- Go to **"Extensions"** → "Manage Extensions".
+
+- Enable Developer Mode in the top right corner of the Extensions page.
+
+- Click on "Load unpacked" in the top left corner.
+
+- Navigate to the following folder inside the cloned repository:
+  
+```
+WaveHeaven/waveheavenproject/weaveheaven-extension
+```
+
+- Select that folder and the extension will be added to Chrome.
+
+**Optional: Right-click the WaveHeaven icon and select "Pin" to keep it easily accessible.**
+
+# How to Use the Extension
+
+Make sure the WaveHeaven dashboard is open in a browser tab. You need this open to select your first sound profile.
+
+Once the first sound profile is selected, you can switch between profiles from anywhere — that's the magic of the extension!
+
+When a profile is applied, a timer will start tracking your listening time. You can pause or reset the timer as needed.
+
+**🔔 NOTE: Currently, the sound profile selection does not change the equalizer due to time constraints and complexity (this is our first browser extension). However, the extension can adjust the overall tab volume, delivering a working MVP. Future improvements are on the way!**
+
