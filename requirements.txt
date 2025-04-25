@@ -1,0 +1,8 @@
+pandas
+python-dotenv
+numpy
+requests
+matplotlib
+django
+pillow
+scikit-learn
