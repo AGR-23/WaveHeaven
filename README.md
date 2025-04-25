@@ -50,11 +50,11 @@ venv\Scripts\activate
 python3 -m venv venv
 source venv/bin/activate
 ```
-- **Install Django:**
-Since this project is built with Django, you need to install Django if it's not already installed. Run the following command:
+- **Install requirements:**
+Since this project is built with Django, you need to install Django, and other things if it's not already installed. Run the following command:
 
 ```
-pip install django
+pip install -r requirements.txt
 ```
 ****
 
