@@ -267,16 +267,7 @@
                     <p class="text-gray-500 dark:text-gray-400">Take a hearing test and adjust your settings.</p>
                 </a>
             </div>
-        
-            <!-- Hearing Risk Section -->
-            <section id="hearing-risk" class="mt-12">
-                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md text-center">
-                    <h2 class="text-2xl font-semibold mb-4">Your Hearing Risk</h2>
-                    <p class="{% if hearing_risk == 'High' %}text-red-600{% elif hearing_risk == 'Medium' %}text-yellow-500{% else %}text-green-600{% endif %} text-lg font-bold">
-                        {{ hearing_risk }}
-                    </p>
-                </div>
-            </section>
+
             <!-- Audio Capture & Automatic Adjustment -->
             <section id="audio-control" class="mt-12">
                 <h2 class="text-2xl font-semibold text-center mb-4">Try WaveHeaven</h2>
@@ -314,28 +305,55 @@
                     </div>
 
                     <!-- Enhanced Equalizer Section -->
-                    <section id="equalizer" class="w-full bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-                        <div class="flex justify-between items-center mb-6">
-                            <h2 class="text-2xl font-semibold">Equalizer</h2>
-                            <div class="flex space-x-2">
-                                <button onclick="applyPreset('flat')"
-                                    class="preset-btn px-3 py-1 text-sm bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition">
+                            <section id="equalizer" class="w-full bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+                            <div class="flex justify-between items-center mb-6">
+                                <h2 class="text-2xl font-semibold"> Equalizer</h2>
+                                <div class="flex space-x-2">
+                                <!-- Flat -->
+                                <div class="relative group">
+                                    <button onclick="applyPreset('flat')"
+                                        class="preset-btn px-3 py-1 text-sm bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition">
                                     Flat
-                                </button>
-                                <button onclick="applyPreset('bass')"
-                                    class="preset-btn px-3 py-1 text-sm bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 rounded-md hover:bg-blue-200 dark:hover:bg-blue-800 transition">
+                                    </button>
+                                    <span class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-max px-2 py-1 text-xs text-white bg-black bg-opacity-75 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                                    Resets all bands to 0 dB
+                                    </span>
+                                </div>
+
+                                <!-- Bass Boost -->
+                                <div class="relative group">
+                                    <button onclick="applyPreset('bass')"
+                                        class="preset-btn px-3 py-1 text-sm bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 rounded-md hover:bg-blue-200 dark:hover:bg-blue-800 transition">
                                     Bass Boost
-                                </button>
-                                <button onclick="applyPreset('vocal')"
-                                    class="preset-btn px-3 py-1 text-sm bg-purple-100 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200 rounded-md hover:bg-purple-200 dark:hover:bg-purple-800 transition">
+                                    </button>
+                                    <span class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-max px-2 py-1 text-xs text-white bg-black bg-opacity-75 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                                    Enhances low frequencies for deeper bass
+                                    </span>
+                                </div>
+
+                                <!-- Vocal Clarity -->
+                                <div class="relative group">
+                                    <button onclick="applyPreset('vocal')"
+                                        class="preset-btn px-3 py-1 text-sm bg-purple-100 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200 rounded-md hover:bg-purple-200 dark:hover:bg-purple-800 transition">
                                     Vocal Clarity
-                                </button>
-                                <button onclick="applyPreset('treble')"
-                                    class="preset-btn px-3 py-1 text-sm bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200 rounded-md hover:bg-green-200 dark:hover:bg-green-800 transition">
+                                    </button>
+                                    <span class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-max px-2 py-1 text-xs text-white bg-black bg-opacity-75 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                                    Boosts mid frequencies for clear vocals
+                                    </span>
+                                </div>
+
+                                <!-- Treble Boost -->
+                                <div class="relative group">
+                                    <button onclick="applyPreset('treble')"
+                                        class="preset-btn px-3 py-1 text-sm bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200 rounded-md hover:bg-green-200 dark:hover:bg-green-800 transition">
                                     Treble Boost
-                                </button>
+                                    </button>
+                                    <span class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-max px-2 py-1 text-xs text-white bg-black bg-opacity-75 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                                    Accentuates high frequencies for sharper detail
+                                    </span>
+                                </div>
+                                </div>
                             </div>
-                        </div>
 
                         <div class="eq-container">
                             <!-- Grid lines for reference -->
