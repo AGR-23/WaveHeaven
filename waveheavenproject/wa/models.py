@@ -16,6 +16,8 @@ class UserPreferences(models.Model):
     low_freq_threshold = models.FloatField(default=50.0)
     mid_freq_threshold = models.FloatField(default=50.0)
     high_freq_threshold = models.FloatField(default=50.0)
+    in_party_mode = models.BooleanField(default=False)
+    current_party = models.ForeignKey('PartySession', on_delete=models.SET_NULL, null=True, blank=True)
     sound_category = models.CharField(
         choices=[('music', 'Música'), ('podcast', 'Podcasts'), ('call', 'Llamadas')],
         default='music',
@@ -80,3 +82,26 @@ class HearingRiskNotification(models.Model):
 
     def __str__(self):
         return f"Notification {self.id} - {self.warning_type} - User {self.user.name}"
+    
+class PartySession(models.Model):
+    host = models.ForeignKey(UserPreferences, on_delete=models.CASCADE, related_name='hosted_parties')
+    participants = models.ManyToManyField(UserPreferences, related_name='joined_parties')
+    session_code = models.CharField(max_length=6, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_active = models.BooleanField(default=True)
+    # Campos para configuración de audio grupal
+    group_bass = models.IntegerField(default=80)
+    group_mid = models.IntegerField(default=60)
+    group_treble = models.IntegerField(default=70)
+
+    def __str__(self):
+        return f"Party Session {self.session_code}"
+
+class ChatMessage(models.Model):
+     party_session = models.ForeignKey('PartySession', on_delete=models.CASCADE, related_name='chat_messages')
+     user = models.ForeignKey(UserPreferences, on_delete=models.CASCADE)  # Link to UserPreferences
+     content = models.TextField()
+     timestamp = models.DateTimeField(auto_now_add=True)
+
+     def __str__(self):
+         return f'Message by {self.user.user.username} in {self.party_session.session_code} at {self.timestamp}'

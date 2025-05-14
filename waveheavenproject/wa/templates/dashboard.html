@@ -1,13 +1,13 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en" class="light">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WaveHeaven Dashboard</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -206,6 +206,30 @@
                 opacity: 0;
             }
         }
+
+        /* Party Mode Styles */
+        #party-controls input {
+            background-color: #fff;
+            color: #000;
+            border: 1px solid #d1d5db;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.375rem;
+            width: 120px;
+        }
+
+        .dark #party-controls input {
+            background-color: #374151;
+            border-color: #4b5563;
+            color: #fff;
+        }
+
+        #party-controls button {
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.875rem;
+        }
     </style>
 </head>
 
@@ -268,6 +292,66 @@
                 </a>
             </div>
 
+            <!-- Party Mode Section -->
+            <section class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md mb-6 mx-auto max-w-4xl">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-xl font-semibold flex items-center gap-2">
+                        <i data-lucide="users" class="h-5 w-5 text-purple-600"></i>
+                        Party Mode
+                    </h2>
+
+                    <div id="party-controls">
+                        {% if user_prefs.in_party_mode %}
+                        <div class="flex items-center gap-4">
+                            <span class="text-sm">Session: {{ user_prefs.current_party.session_code }}</span>
+                            <button onclick="leaveParty() "
+                                class="px-3 py-1 bg-red-600 text-white rounded-md hover:bg-red-700 transition flex items-center gap-1">
+                                <i data-lucide="log-out" class="h-4 w-4"></i>
+                                Leave
+                            </button>
+                            {% if user_prefs.current_party.participants.all %}
+                            <div class="mt-2">
+                                <p class="font-semibold">Participants:</p>
+                                <ul>
+                                    {% for participant in user_prefs.current_party.participants.all %}
+                                    <li>{{ participant.user.username }}
+                                        {% if participant == user_prefs.current_party.host %}
+                                        (Host)
+                                        {% endif %}
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% else %}
+                        <div class="flex gap-2">
+                            <input type="text" id="party-code" placeholder="Enter code"
+                                class="px-3 py-1 border rounded-md dark:bg-gray-700 dark:border-gray-600">
+                            <button onclick="joinParty()"
+                                class="px-3 py-1 bg-green-600 text-white rounded-md hover:bg-green-700 transition flex items-center gap-1">
+                                <i data-lucide="plus" class="h-4 w-4"></i>
+                                Join
+                            </button>
+                            <button onclick="createParty()"
+                                class="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition flex items-center gap-1">
+                                <i data-lucide="party-popper" class="h-4 w-4"></i>
+                                Create
+                            </button>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div id="chat-container" class="mt-4 p-4 bg-gray-100 dark:bg-gray-700 rounded-md h-48 overflow-y-auto">
+                </div>
+                <div class="flex mt-2">
+                    <input type="text" id="chat-message-input" class="flex-1 px-3 py-1 rounded-md dark:bg-gray-800"
+                        placeholder="Type your message...">
+                    <button onclick="sendMessage()"
+                        class="ml-2 px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700">Send</button>
+                </div>
+            </section>
+
             <!-- Audio Capture & Automatic Adjustment -->
             <section id="audio-control" class="mt-12">
                 <h2 class="text-2xl font-semibold text-center mb-4">Try WaveHeaven</h2>
@@ -305,18 +389,19 @@
                     </div>
 
                     <!-- Enhanced Equalizer Section -->
-                            <section id="equalizer" class="w-full bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-                            <div class="flex justify-between items-center mb-6">
-                                <h2 class="text-2xl font-semibold"> Equalizer</h2>
-                                <div class="flex space-x-2">
+                    <section id="equalizer" class="w-full bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-2xl font-semibold"> Equalizer</h2>
+                            <div class="flex space-x-2">
                                 <!-- Flat -->
                                 <div class="relative group">
                                     <button onclick="applyPreset('flat')"
                                         class="preset-btn px-3 py-1 text-sm bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition">
-                                    Flat
+                                        Flat
                                     </button>
-                                    <span class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-max px-2 py-1 text-xs text-white bg-black bg-opacity-75 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                                    Resets all bands to 0 dB
+                                    <span
+                                        class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-max px-2 py-1 text-xs text-white bg-black bg-opacity-75 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                                        Resets all bands to 0 dB
                                     </span>
                                 </div>
 
@@ -324,10 +409,11 @@
                                 <div class="relative group">
                                     <button onclick="applyPreset('bass')"
                                         class="preset-btn px-3 py-1 text-sm bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 rounded-md hover:bg-blue-200 dark:hover:bg-blue-800 transition">
-                                    Bass Boost
+                                        Bass Boost
                                     </button>
-                                    <span class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-max px-2 py-1 text-xs text-white bg-black bg-opacity-75 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                                    Enhances low frequencies for deeper bass
+                                    <span
+                                        class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-max px-2 py-1 text-xs text-white bg-black bg-opacity-75 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                                        Enhances low frequencies for deeper bass
                                     </span>
                                 </div>
 
@@ -335,10 +421,11 @@
                                 <div class="relative group">
                                     <button onclick="applyPreset('vocal')"
                                         class="preset-btn px-3 py-1 text-sm bg-purple-100 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200 rounded-md hover:bg-purple-200 dark:hover:bg-purple-800 transition">
-                                    Vocal Clarity
+                                        Vocal Clarity
                                     </button>
-                                    <span class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-max px-2 py-1 text-xs text-white bg-black bg-opacity-75 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                                    Boosts mid frequencies for clear vocals
+                                    <span
+                                        class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-max px-2 py-1 text-xs text-white bg-black bg-opacity-75 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                                        Boosts mid frequencies for clear vocals
                                     </span>
                                 </div>
 
@@ -346,14 +433,15 @@
                                 <div class="relative group">
                                     <button onclick="applyPreset('treble')"
                                         class="preset-btn px-3 py-1 text-sm bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200 rounded-md hover:bg-green-200 dark:hover:bg-green-800 transition">
-                                    Treble Boost
+                                        Treble Boost
                                     </button>
-                                    <span class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-max px-2 py-1 text-xs text-white bg-black bg-opacity-75 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                                    Accentuates high frequencies for sharper detail
+                                    <span
+                                        class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-max px-2 py-1 text-xs text-white bg-black bg-opacity-75 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                                        Accentuates high frequencies for sharper detail
                                     </span>
                                 </div>
-                                </div>
                             </div>
+                        </div>
 
                         <div class="eq-container">
                             <!-- Grid lines for reference -->
@@ -905,39 +993,48 @@
 
         // Apply sound profile
         async function applySoundProfile(profileName = null) {
-
             try {
                 if (!profileName) {
                     profileName = document.getElementById("soundProfile").value;
                 }
 
-                const response = await fetch(`/apply_profile_by_name/${profileName}/`);
-                const data = await response.json();
+                if (typeof userInPartyMode !== "undefined" && userInPartyMode) {
+                    const response = await fetch('/party/get_settings/');
+                    const settings = await response.json();
 
-                if (data.status === "success") {
-                    console.log(`Applying profile: ${profileName}`, data.profile);
+                    // Aplicar valores del grupo
+                    updateEqualizer(60, settings.bass);
+                    updateEqualizer(1000, settings.mid);
+                    updateEqualizer(16000, settings.treble);
+                } else {
+                    const response = await fetch(`/apply_profile_by_name/${profileName}/`);
+                    const data = await response.json();
 
-                    // Aplicar ajustes del perfil al ecualizador
-                    if (data.applied_profile.bass !== undefined) {
-                        updateEqualizer(60, data.applied_profile.bass / 2 - 25);
-                        document.getElementById('eq60').value = data.applied_profile.bass / 2 - 25;
+                    if (data.status === "success") {
+                        console.log(`Applying profile: ${profileName}`, data.profile);
+
+                        // Aplicar ajustes del perfil al ecualizador
+                        if (data.applied_profile.bass !== undefined) {
+                            updateEqualizer(60, data.applied_profile.bass / 2 - 25);
+                            document.getElementById('eq60').value = data.applied_profile.bass / 2 - 25;
+                        }
+                        if (data.applied_profile.mid !== undefined) {
+                            updateEqualizer(1000, data.applied_profile.mid / 2 - 25);
+                            document.getElementById('eq1000').value = data.applied_profile.mid / 2 - 25;
+                        }
+                        if (data.applied_profile.treble !== undefined) {
+                            updateEqualizer(16000, data.applied_profile.treble / 2 - 25);
+                            document.getElementById('eq16000').value = data.applied_profile.treble / 2 - 25;
+                        }
                     }
-                    if (data.applied_profile.mid !== undefined) {
-                        updateEqualizer(1000, data.applied_profile.mid / 2 - 25);
-                        document.getElementById('eq1000').value = data.applied_profile.mid / 2 - 25;
-                    }
-                    if (data.applied_profile.treble !== undefined) {
-                        updateEqualizer(16000, data.applied_profile.treble / 2 - 25);
-                        document.getElementById('eq16000').value = data.applied_profile.treble / 2 - 25;
-                    }
+
+                    localStorage.setItem('lastAppliedProfile', profileName);
                 }
-
-                localStorage.setItem('lastAppliedProfile', profileName);
-
             } catch (error) {
                 console.error("Error applying profile:", error)
             }
         }
+
 
         // Update exposure time display
         function updateExposureTimeDisplay() {
@@ -980,7 +1077,13 @@
         }
 
         // Cargar perfiles al iniciar
-        document.addEventListener("DOMContentLoaded", loadSoundProfiles);
+        document.addEventListener("DOMContentLoaded", () => {
+            if (typeof loadSoundProfiles === 'function') {
+                loadSoundProfiles();
+            } else {
+                console.warn("⚠️ loadSoundProfiles is not defined.");
+            }
+        });
 
         // Dark mode toggle
         document.getElementById('darkModeToggle').addEventListener('click', () => {
@@ -998,7 +1101,172 @@
         frequencies.forEach(freq => {
             updateEqualizer(freq, 0);
         });
+
+        // Party Mode Functions
+        async function createParty() {
+            console.log("Create Party function triggered"); // Debug
+            try {
+                const csrfToken = getCookie('csrftoken');
+                if (!csrfToken) {
+                    console.error("CSRF token not found!");
+                    return;
+                }
+
+                const response = await fetch('/party/create/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken,
+                    },
+                    credentials: 'include' // Importante para cookies
+                });
+
+                console.log("Response status:", response.status); // Debug
+
+                const data = await response.json();
+                console.log("Response data:", data); // Debug
+
+                if (data.status === 'success') {
+                    showNotification(`🎉 Party created! Code: ${data.session_code}`, 'success');
+                    setTimeout(() => location.reload(), 1500); // Recarga después de 1.5 segundos
+                } else {
+                    showNotification(`Error: ${data.message || 'Unknown error'}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error creating party:', error);
+                showNotification('⚠️ Failed to create party. Check console.', 'error');
+            }
+        }
+
+        async function joinParty() {
+            const code = document.getElementById('party-code').value.trim();
+            if (!code) {
+                showNotification('Please enter a party code', 'warning');
+                return;
+            }
+
+            try {
+                const response = await fetch('/party/join/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken'),
+                    },
+                    body: JSON.stringify({ session_code: code })
+                });
+
+                const data = await response.json();
+                if (data.status === 'success') {
+                    showNotification('🎧 Joined party!', 'success');
+                    location.reload();
+                } else {
+                    showNotification(data.message || '❌ Invalid code', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('🚨 Connection error', 'error');
+            }
+        }
+
+        async function leaveParty() {
+            try {
+                const response = await fetch('/party/leave/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                });
+                const data = await response.json();
+                if (data.status === 'success') {
+                    // Optionally clear the chat container
+                    const chatContainer = document.getElementById('chat-container');
+                    if (chatContainer) {
+                        chatContainer.innerHTML = '';
+                    }
+                    // Clear the interval for fetching messages
+                    clearInterval(messageInterval); // Assuming you store the interval ID
+                    // Reload the page to reflect the change in party status
+                    window.location.reload();
+                } else {
+                    console.error('Failed to leave party:', data.message);
+                    // Optionally display an error message to the user
+                }
+            } catch (error) {
+                console.error('Error leaving party:', error);
+                // Optionally display an error message to the user
+            }
+        }
+        async function fetchMessages() {
+            try {
+                const response = await fetch(`/party/chat/${'{{ user_prefs.current_party.id }}'}/`); // Replace with your URL
+                const data = await response.json();
+                if (data.status === 'success') {
+                    const chatContainer = document.getElementById('chat-container');
+                    chatContainer.innerHTML = ''; // Clear previous messages
+                    data.messages.forEach(msg => {
+                        const messageElement = document.createElement('div');
+                        messageElement.innerHTML = `<strong>${msg.user}:</strong> ${msg.content}`;
+                        chatContainer.appendChild(messageElement);
+                    });
+                    chatContainer.scrollTop = chatContainer.scrollHeight;  // Scroll to bottom
+                } else {
+                    console.error('Failed to fetch messages:', data.message);
+                }
+            } catch (error) {
+                console.error('Error fetching messages:', error);
+            }
+        }
+
+        // Function to send a new chat message
+        async function sendMessage() {
+            const input = document.getElementById('chat-message-input');
+            const content = input.value.trim();
+            if (content) {
+                try {
+                    const response = await fetch('/party/chat/send/', { // Replace with your URL
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCookie('csrftoken')  // Get CSRF token (see utility function below)
+                        },
+                        body: JSON.stringify({ content: content })
+                    });
+                    const data = await response.json();
+                    if (data.status === 'success') {
+                        input.value = '';  // Clear input
+                        fetchMessages(); // Refresh messages
+                    } else {
+                        console.error('Failed to send message:', data.message);
+                    }
+                } catch (error) {
+                    console.error('Error sending message:', error);
+                }
+            }
+        }
+        // Utility function to get CSRF token from cookies
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    let cookie = cookies[i].trim();
+                    if (cookie.startsWith(name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Fetch messages initially and then periodically
+        // Store the interval ID so we can clear it later
+        let messageInterval = setInterval(fetchMessages, 3000);
+        fetchMessages();
+
     </script>
+
 </body>
 
 </html>

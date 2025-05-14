@@ -8,9 +8,12 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from .forms import UserRegisterForm, DeviceForm
 from .models import Device
-from wa.models import UserPreferences, Device, ExposureReport, AudioAdjustmentRecord, HearingRiskNotification
+from wa.models import UserPreferences, Device, ExposureReport, AudioAdjustmentRecord, HearingRiskNotification, PartySession, ChatMessage
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User  # Importar modelo de usuario
+import random
+import string
+from profiles.views import apply_profile_by_name
 
 model = joblib.load('hearing_risk_model.pkl') # llamar el modelo de riesgo auditivo
 
@@ -76,10 +79,16 @@ def adjust_volume(request):
             user_prefs, created = UserPreferences.objects.get_or_create(user=request.user)
         else:
             user_prefs, created = UserPreferences.objects.get_or_create(user=User.objects.first())  # Usa el primer usuario
-
-        # Ajustar el volumen en un rango de ±10 unidades
-        ideal_volume = user_prefs.ideal_volume
-        adjusted_volume = min(max(detected_volume, ideal_volume - 10), ideal_volume + 10)
+            
+        if user_prefs.in_party_mode and user_prefs.current_party:
+            # Aumentar límite de volumen en modo fiesta
+            ideal_volume = user_prefs.ideal_volume
+            max_volume = ideal_volume + 20  # Permite +20% sobre el volumen ideal
+            adjusted_volume = min(max(detected_volume, ideal_volume - 10), max_volume)
+        else:
+            # Ajustar el volumen en un rango de ±10 unidades
+            ideal_volume = user_prefs.ideal_volume
+            adjusted_volume = min(max(detected_volume, ideal_volume - 10), ideal_volume + 10)
 
         # Guardar el volumen ajustado en la base de datos
         user_prefs.last_adjusted_volume = adjusted_volume
@@ -154,6 +163,7 @@ def user_register(request):
                 {"name": "Gaming", "bass": 70, "mid": 65, "treble": 75, "environment": "Gaming Room"},
                 {"name": "Calls", "bass": 30, "mid": 95, "treble": 80, "environment": "Office"},
                 {"name": "Relax", "bass": 60, "mid": 50, "treble": 40, "environment": "Quiet Space"},
+                {"name": "Party!", "bass": 90, "mid": 70, "treble": 85, "environment": "Party"},
             ]
             user_prefs.save()
 
@@ -170,6 +180,21 @@ def user_register(request):
         device_form = DeviceForm()
 
     return render(request, "register.html", {"user_form": user_form, "device_form": device_form})
+
+@login_required
+def create_party_session(request):
+    if request.method == 'POST':
+        user_prefs = UserPreferences.objects.get(user=request.user)
+        session_code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+        party = PartySession.objects.create(host=user_prefs, session_code=session_code)
+        
+        party.participants.add(user_prefs)
+
+        # Apply "Party!" profile after creating the session
+        apply_profile_by_name(request, "Party!")  # Assuming request is needed by the function
+
+        return JsonResponse({'status': 'success', 'session_code': session_code})
+    return JsonResponse({'status': 'error'}, status=400)
 
 def hearing_test(request):
     user_prefs = UserPreferences.objects.get(user=request.user)
@@ -223,7 +248,8 @@ def user_dashboard(request):
 
     return render(request, "dashboard.html", {
         "profiles": profiles,
-        "hearing_risk": hearing_risk
+        "hearing_risk": hearing_risk,
+        "user_prefs": user_prefs,
         })
 
 # implementar la vista para mostrar el ecualizador FR:O7
@@ -238,29 +264,47 @@ def equalizer_view(request):
 def save_equalizer_settings(request):
     if request.method == 'POST':
         try:
-            data = json.loads(request.body)
-            profile_name = data.get('profile_name', 'Custom')
-
-            # Obtener las preferencias del usuario
             user_prefs = UserPreferences.objects.get(user=request.user)
+            if user_prefs.in_party_mode and user_prefs.current_party:
+                # Actualizar configuración grupal
+                party = user_prefs.current_party
+                data = json.loads(request.body)
+                
+                party.group_bass = data.get('bass', party.group_bass)
+                party.group_mid = data.get('mid', party.group_mid)
+                party.group_treble = data.get('treble', party.group_treble)
+                party.save()
+                
+                # Forzar actualización en todos los participantes
+                for participant in party.participants.all():
+                    participant.active_profile = "Party!"
+                    participant.save(update_fields=['active_profile'])
+                
+                return JsonResponse({'status': 'success'})
+            else:
+                data = json.loads(request.body)
+                profile_name = data.get('profile_name', 'Custom')
 
-            # Crear un nuevo perfil de sonido con todas las frecuencias
-            new_profile = {
-                'name': profile_name,
-                'bass': data.get('bass', 50),
-                'mid': data.get('mid', 50),
-                'treble': data.get('treble', 50),
-                'environment': 'Custom'
-            }
+                # Obtener las preferencias del usuario
+                user_prefs = UserPreferences.objects.get(user=request.user)
 
-            # Añadir el nuevo perfil a la lista de perfiles de audio
-            profiles = user_prefs.get_audio_profiles()
-            profiles.append(new_profile)
+                # Crear un nuevo perfil de sonido con todas las frecuencias
+                new_profile = {
+                    'name': profile_name,
+                    'bass': data.get('bass', 50),
+                    'mid': data.get('mid', 50),
+                    'treble': data.get('treble', 50),
+                    'environment': 'Custom'
+                }
 
-            # Guardar los perfiles actualizados
-            user_prefs.save_audio_profiles(profiles)
+                # Añadir el nuevo perfil a la lista de perfiles de audio
+                profiles = user_prefs.get_audio_profiles()
+                profiles.append(new_profile)
 
-            return JsonResponse({'status': 'success', 'applied_profile': new_profile})
+                # Guardar los perfiles actualizados
+                user_prefs.save_audio_profiles(profiles)
+
+                return JsonResponse({'status': 'success', 'applied_profile': new_profile})
 
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
@@ -362,3 +406,132 @@ def spotify_search_playback(request):
         "token": token,
         "profiles": profiles
     })
+    
+    # Función interna para aplicar el perfil Party! directamente al modelo
+def apply_profile_by_name_internal(user_prefs, profile_name):
+    profiles = user_prefs.get_audio_profiles()
+    profile = next(
+        (p for p in profiles if str(p.get('name', '')).strip().lower() == profile_name.strip().lower()),
+        None
+    )
+    if profile:
+        user_prefs.active_profile = profile_name
+        user_prefs.audio_settings = json.dumps(profile)
+        user_prefs.save(update_fields=['active_profile', 'audio_settings'])
+        
+@login_required
+@csrf_exempt
+def create_party_session(request):
+    if request.method == 'POST':
+        user_prefs = UserPreferences.objects.get(user=request.user)
+        session_code = str(random.randint(100000, 999999))
+        party = PartySession.objects.create(
+            host=user_prefs,  # Set the host here
+            session_code=session_code,
+            group_bass=90,
+            group_mid=70,
+            group_treble=85
+        )
+        party.participants.add(user_prefs) #make sure the host is added to the participants list
+        #  Get the list of participants
+        participants = list(party.participants.values_list('user__username', flat=True))
+
+        user_prefs.in_party_mode = True
+        user_prefs.current_party = party
+        user_prefs.save()
+
+        # apply_profile_by_name_internal(user_prefs, "Party!")  # You can keep this if it's needed
+
+        return JsonResponse({'status': 'success', 'session_code': session_code, 'participants': participants, 'host': user_prefs.user.username}) #send the host username in the response
+    return JsonResponse({'status': 'error'}, status=400)
+
+# views.py (en join_party_session)
+@login_required
+@csrf_exempt
+def join_party_session(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        session_code = data.get('session_code')
+        try:
+            party = PartySession.objects.get(session_code=session_code, is_active=True)
+            user_prefs = UserPreferences.objects.get(user=request.user)
+            user_prefs.in_party_mode = True
+            user_prefs.current_party = party
+            user_prefs.save()
+            party.participants.add(user_prefs)
+            
+             #  Get the list of participants
+            participants = list(party.participants.values_list('user__username', flat=True))
+
+            # Aplicar el perfil "Party" al usuario que se une
+            from profiles.views import apply_profile_by_name
+            # Simular una request para apply_profile_by_name para el usuario actual
+           
+
+            return JsonResponse({'status': 'success', 'session_code': session_code, 'participants': participants})
+        except PartySession.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Código inválido'}, status=404)
+    return JsonResponse({'status': 'error'}, status=400)
+
+@login_required
+def update_party_settings(request):
+    if request.method == 'POST':
+        user_prefs = UserPreferences.objects.get(user=request.user)
+        if user_prefs.current_party and user_prefs.current_party.host == user_prefs:
+            data = json.loads(request.body)
+            party = user_prefs.current_party
+            party.group_bass = data.get('bass', party.group_bass)
+            party.group_mid = data.get('mid', party.group_mid)
+            party.group_treble = data.get('treble', party.group_treble)
+            party.save()
+            return JsonResponse({'status': 'success'})
+        return JsonResponse({'status': 'error', 'message': 'No autorizado'}, status=403)
+    return JsonResponse({'status': 'error'}, status=400)
+
+@login_required
+@csrf_exempt
+def leave_party(request):
+    if request.method == 'POST':
+        user_prefs = UserPreferences.objects.get(user=request.user)
+        user_prefs.in_party_mode = False
+        user_prefs.current_party = None
+        user_prefs.save()
+        return JsonResponse({'status': 'success'})
+    return JsonResponse({'status': 'error'}, status=400)
+
+@csrf_exempt
+@login_required
+def send_chat_message(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            content = data.get('content')
+            user_prefs = UserPreferences.objects.get(user=request.user)
+            party_session = user_prefs.current_party
+
+            if not party_session:
+                return JsonResponse({'status': 'error', 'message': 'User is not in a party.'}, status=400)
+
+            message = ChatMessage.objects.create(
+                user=user_prefs,
+                party_session=party_session,
+                content=content
+            )
+            return JsonResponse({'status': 'success'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    return JsonResponse({'status': 'error'}, status=400)
+
+@login_required
+def get_chat_messages(request, party_id):
+    try:
+        party_session = PartySession.objects.get(id=party_id)
+        messages = ChatMessage.objects.filter(party_session=party_session).order_by('timestamp')[:100]  # Get last 100 messages
+        messages_list = [{
+            'user': msg.user.user.username,
+            'content': msg.content,
+            'timestamp': msg.timestamp.strftime('%Y-%m-%d %H:%M:%S')  # Format timestamp
+        } for msg in messages]
+        return JsonResponse({'status': 'success', 'messages': messages_list})
+    except PartySession.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Party session not found.'}, status=404)

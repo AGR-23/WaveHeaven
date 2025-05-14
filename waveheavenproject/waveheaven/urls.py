@@ -19,7 +19,13 @@ from wa.views import (
     spotify_callback,
     spotify_player,
     spotify_playback,
-    spotify_search_playback
+    spotify_search_playback,
+    update_party_settings,
+    join_party_session,  
+    create_party_session,
+    leave_party,
+    send_chat_message,
+    get_chat_messages,
 )
 
 from profiles import views
@@ -71,5 +77,12 @@ urlpatterns = [
     path('spotify/player/', spotify_player, name='spotify_player'),
     path('spotify/playback/', spotify_playback, name='spotify_playback'),
     path('spotify/search/', spotify_search_playback, name='spotify_search_playback'),
-
+    
+    # Party Session
+    path('party/create/', create_party_session, name='create_party'),
+    path('party/join/', join_party_session, name='join_party'),
+    path('party/settings/', update_party_settings, name='update_party_settings'),
+    path('party/chat/send/', send_chat_message, name='send_chat_message'),
+    path('party/chat/<int:party_id>/', get_chat_messages, name='get_chat_messages'),
+    path('party/leave/', leave_party, name='leave_party'),
     ]

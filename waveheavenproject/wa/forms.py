@@ -31,7 +31,7 @@ class DeviceForm(forms.ModelForm):
     OS_CHOICES = [
         ("Android", "Android"),
         ("iOS", "iOS"),
-        ("Otro", "Otro"),
+        ("Other", "Other"),
     ]
     
     type = forms.ChoiceField(
@@ -42,4 +42,4 @@ class DeviceForm(forms.ModelForm):
 
     class Meta:
         model = Device
-        fields = ["type", "version", "headphone_compatibility"]
+        fields = ["type"]

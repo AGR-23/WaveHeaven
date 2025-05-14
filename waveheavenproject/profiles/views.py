@@ -1,4 +1,5 @@
 import json
+import random
 from datetime import date, timedelta
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
@@ -10,7 +11,7 @@ from .models import UserStatistics, ExposureReport
 from .forms import SoundProfileForm
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from wa.models import UserPreferences, ExposureReport, AudioAdjustmentRecord, HearingRiskNotification
+from wa.models import UserPreferences, ExposureReport, AudioAdjustmentRecord, HearingRiskNotification, PartySession
 from datetime import timedelta
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
@@ -62,6 +63,7 @@ def list_profiles(request):
             {"name": "Gaming", "bass": 70, "mid": 65, "treble": 75, "environment": "Gaming Room"},
             {"name": "Calls", "bass": 30, "mid": 95, "treble": 80, "environment": "Office"},
             {"name": "Relax", "bass": 60, "mid": 50, "treble": 40, "environment": "Quiet Space"},
+            {"name": "Party!", "bass": 90, "mid": 70, "treble": 85, "environment": "Party"},
         ]
         user_prefs.save(update_fields=['audio_profiles'])
         print("👉 Usuario autenticado:", request.user.username)
@@ -71,6 +73,30 @@ def list_profiles(request):
         "profiles": user_prefs.audio_profiles
     })
 
+@login_required
+@csrf_exempt
+def create_party_session(request):
+    if request.method == 'POST':
+        user_prefs = UserPreferences.objects.get(user=request.user)
+        session_code = str(random.randint(100000, 999999))
+        
+        # Crear sesión con configuración del perfil Party!
+        party = PartySession.objects.create(
+            host=user_prefs,
+            session_code=session_code,
+            group_bass=90,    # Bass aumentado
+            group_mid=70,     # Mid balanceado
+            group_treble=85   # Treble elevado
+        )
+        
+        user_prefs.in_party_mode = True
+        user_prefs.current_party = party
+        user_prefs.save()
+        
+        # Aplicar perfil Party! al host
+        apply_profile_by_name(request, "Party!")
+        
+        return JsonResponse({'status': 'success', 'session_code': session_code})
 
 @csrf_exempt
 @login_required
@@ -242,7 +268,10 @@ def apply_profile_by_name(request, profile_name):
 
         # Actualización segura
         user_prefs.active_profile = profile_name
+        user_prefs.audio_settings = json.dumps(profile)
         user_prefs.save(update_fields=['active_profile'])
+        
+        
 
         return JsonResponse({
             "status": "success",
