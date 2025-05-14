@@ -135,8 +135,6 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:8000/*",
     "chrome-extension://dldfkbaajdolhpholkgemedpnofekioj",
 ]
-# Hosts permitidos
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 # Forzar respuestas JSON en producción
 if not DEBUG:
