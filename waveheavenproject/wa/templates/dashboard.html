@@ -388,6 +388,14 @@
                                 class="font-semibold">0 minutes</span></p>
                     </div>
 
+                    <!-- Sleep Mode Status -->
+                    <section id="sleep-mode-status" class="mt-12">
+                        <div class="bg-yellow-100 dark:bg-yellow-900 p-4 rounded-lg shadow-md text-center hidden" id="sleepNotice">
+                            <h2 class="text-lg font-semibold text-yellow-800 dark:text-yellow-200">Sleep Mode Activated</h2>
+                            <p class="text-yellow-700 dark:text-yellow-300">The system entered low-power mode due to inactivity.</p>
+                        </div>
+                    </section>
+
                     <!-- Enhanced Equalizer Section -->
                     <section id="equalizer" class="w-full bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
                         <div class="flex justify-between items-center mb-6">
@@ -580,7 +588,9 @@
         let exposureThreshold = 5 * 1000; // 5 seconds in milliseconds (just to test later it should be 10 minutes)
         let warningTriggered = false;
         let eqFilters = [];
+        let inactivityTimer = null; // Timer for inactivity
 
+        const INACTIVITY_TIMEOUT = 5 * 60 * 1000; // 5 minutes para el sleep mode
         const frequencies = [60, 250, 1000, 4000, 16000];
 
         const selectSoundProfile = document.querySelector("#soundProfile");
@@ -1264,6 +1274,33 @@
         // Store the interval ID so we can clear it later
         let messageInterval = setInterval(fetchMessages, 3000);
         fetchMessages();
+
+        //Sleep mode
+        function resetInactivityTimer() {
+            if (inactivityTimer) {
+                clearTimeout(inactivityTimer);
+                document.getElementById('sleepNotice').classList.add('hidden');
+            }
+            inactivityTimer = setTimeout(enterSleepMode, INACTIVITY_TIMEOUT);
+            console.log("Inactivity timer reset.");
+        }
+
+        ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(event => {
+            window.addEventListener(event, resetInactivityTimer);
+        });
+
+        resetInactivityTimer();  // Start it on load
+
+        function enterSleepMode() {
+            console.log("Entering sleep mode due to inactivity.");
+
+            // Stop audio processing
+            stopListening();
+            globalAudioContext.suspend();
+
+            // Optionally: dim screen, show a "Paused" overlay, etc.
+            document.getElementById('sleepNotice').classList.remove('hidden');
+        }
 
     </script>
 
